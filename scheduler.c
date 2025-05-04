@@ -7,9 +7,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void runScheduler(Process *processes[], int processCount, int algorithm)
+void runScheduler(Process processes[], int processCount, int algorithm)
 {
-    resetProcesses(procceses, processCount);
+    resetProcesses(processses, processCount);
 
     switch (algorithm) {
     case FCFS:
@@ -85,3 +85,4 @@ void runFCFS(Process processes[], int processCount)
     }
 
     printf("FCFS Simulation COMPLETED-----------\n");
+}
