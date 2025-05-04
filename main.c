@@ -38,8 +38,11 @@ int main()
 
     scanf("%d", &selectedAlgorithm);
 
-    runScheduler(processes, processCount, selectedAlgorithm);
+    runScheduler(processes, processCount, selectedAlgorithm);// 스케줄러 run
 
+
+
+    printResults(processes, processCount, selectedAlgorithm);// 결과 출력
     return 0;
 }
 

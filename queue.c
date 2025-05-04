@@ -33,6 +33,7 @@ bool enqueue(Queue *queue, Process *process)
         queue->count++;
         return true;
     }
+}
 
     Process *dequeue(Queue * queue)
     {
@@ -44,3 +45,4 @@ bool enqueue(Queue *queue, Process *process)
         queue->count--;
         return item;
     }
+

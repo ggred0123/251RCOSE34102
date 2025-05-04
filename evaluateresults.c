@@ -16,11 +16,18 @@ void calculateMetrics(Process *process)
     }
 }
 
-void printResults(Process processes[], int processCount, const char *algorithmName)
+void printResults(Process processes[], int processCount,int algorithm)
 {
     int totalWaitingTime    = 0;
     int totalTurnaroundTime = 0;
-    printf("\n--- Scheduling Results for %s ---\n", algorithmName);
+    const char* algorithmNames[] = {
+        "",         // 인덱스 0은 사용 안 함 (선택적)
+        "FCFS",     // 인덱스 1 (ALG_FCFS)
+        "SJF",      // 인덱스 2 (ALG_SJF)
+        "RR"        // 인덱스 3 (ALG_RR)
+        // ... 다른 알고리즘 이름 추가 ...
+    };
+    printf("\n--- Scheduling Results for %s ---\n", algorithmNames[algorithm]);
     printf("PID\tArrivalTime\tCPUBurstTime\tCompletionTime\tWaitingTime\tTurnaroundTime\n");
 
     for (int i = 0; i < processCount; i++) {
