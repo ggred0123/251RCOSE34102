@@ -1,7 +1,7 @@
 #include "evaluateresults.h"
 #include <stdio.h>
 
-void calculateMetrics(Process *process)
+void calculateMetrics(Process* process)
 {
     if (process->status == TERMINATED) {
         process->turnaround_time = process->completion_time - process->arrival_time;
@@ -16,7 +16,7 @@ void calculateMetrics(Process *process)
     }
 }
 
-void printResults(Process processes[], int processCount,int algorithm)
+void printResults(Process* processes[], int processCount,int algorithm)
 {
     int totalWaitingTime    = 0;
     int totalTurnaroundTime = 0;
@@ -28,21 +28,22 @@ void printResults(Process processes[], int processCount,int algorithm)
         // ... 다른 알고리즘 이름 추가 ...
     };
     printf("\n--- Scheduling Results for %s ---\n", algorithmNames[algorithm]);
-    printf("PID\tArrivalTime\tCPUBurstTime\tCompletionTime\tWaitingTime\tTurnaroundTime\n");
+    printf("PID\tArrivalTime\tCPUBurstTime\tCompletionTime\tWaitingTime\tTurnaroundTime\tIO_count\n");
 
     for (int i = 0; i < processCount; i++) {
-        calculateMetrics(&processes[i]);
+        calculateMetrics(processes[i]);
 
-        printf("%d\t%d\t%d\t%d\t\t%d\t%d\t\n",
-               processes[i].pid,
-               processes[i].arrival_time,
-               processes[i].cpu_burst_time,
-               processes[i].completion_time,
-               processes[i].waiting_time,
-               processes[i].turnaround_time);
-        if (processes[i].status == TERMINATED) {
-            totalWaitingTime += processes[i].waiting_time;
-            totalTurnaroundTime += processes[i].turnaround_time;
+        printf("%d\t%d\t%d\t%d\t\t%d\t%d\t%d\t\n",
+               processes[i]->pid,
+               processes[i]->arrival_time,
+               processes[i]->cpu_burst_time,
+               processes[i]->completion_time,
+               processes[i]->waiting_time,
+               processes[i]->turnaround_time,
+               processes[i]->io_count);
+        if (processes[i]->status == TERMINATED) {
+            totalWaitingTime += processes[i]->waiting_time;
+            totalTurnaroundTime += processes[i]->turnaround_time;
         }
     }
 

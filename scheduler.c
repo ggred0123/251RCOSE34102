@@ -7,23 +7,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void runFCFS(Process processes[], int processCount)
+void runFCFS(Process* processes[], int processCount)
 {
     int      currentTime     = 0;
     int      terminatedCount = 0;
     Queue    readyQueue;
-    Process* runningProcess = NULL;
+    Queue    waitQueue;
+    Process *runningProcess = NULL;
 
     initialize_queue(&readyQueue);
+    initialize_queue(&waitQueue);
 
     printf("FCFS Simulation STARTED-----------\n");
 
     while (terminatedCount < processCount) {
         // 도착 프로세스 확인 및 ready queue 삽입
         for (int i = 0; i < processCount; i++) {
-            if (processes[i].status == NEW && processes[i].arrival_time <= currentTime) {
-                processes[i].status = READY;
-                enqueue(&readyQueue, &processes[i]);
+            if (processes[i]->status == NEW && processes[i]->arrival_time <= currentTime) {
+                processes[i]->status = READY;
+                enqueue(&readyQueue, processes[i]);
             }
         }
 
@@ -36,38 +38,52 @@ void runFCFS(Process processes[], int processCount)
         // cpu 할당 및 시간 흐름
         if (runningProcess != NULL) {
             runningProcess->remaining_cpu_burst_time--;
+            runningProcess->cpu_time_used++;
             // 프로세스 종료되는거 확인
             if (runningProcess->remaining_cpu_burst_time == 0) {
                 runningProcess->status          = TERMINATED;
                 runningProcess->completion_time = currentTime + 1;
                 terminatedCount++;
                 runningProcess = NULL;
+
+            }
+            // IO 들어갈 타이밍
+            else if (runningProcess->current_io_index < runningProcess->io_count &&
+                     runningProcess->cpu_time_used ==
+                         runningProcess->io_trigger[runningProcess->current_io_index]) {
+                runningProcess->remaining_io_burst_time =
+                    runningProcess->io_burst_times[runningProcess->current_io_index];
+                runningProcess->status = WAITING;
+                enqueue(&waitQueue, runningProcess);
+                runningProcess = NULL;
             }
         }
+
+        IO_Operation(&readyQueue, &waitQueue);
+
         currentTime++;
     }
     printf("FCFS Simulation COMPLETED-----------\n");
 }
 
-
-void resetProcesses(Process processes[], int processCount)
+void resetProcesses(Process* processes[], int processCount)
 {
     for (int i = 0; i < processCount; i++) {
         // 남은 실행 시간을 원래 burst 시간으로 복원
-        processes[i].remaining_cpu_burst_time = processes[i].cpu_burst_time;
-        processes[i].remaining_io_burst_time  = processes[i].io_burst_time; // I/O 시간도 복원
+        processes[i]->remaining_cpu_burst_time = processes[i]->cpu_burst_time;
+        processes[i]->remaining_io_burst_time  = processes[i]->io_burst_time; // I/O 시간도 복원
 
         // 상태를 NEW로 초기화 (스케줄러가 arrivalTime에 맞춰 READY로 변경)
-        processes[i].status = NEW;
+        processes[i]->status = NEW;
 
         // 측정된 메트릭 값들을 초기화 (0 또는 -1 등 초기 상태 값으로)
-        processes[i].completion_time = 0; // 또는 -1 (미완료 표시)
-        processes[i].waiting_time    = 0;
-        processes[i].turnaround_time = 0; // 또는 -1
+        processes[i]->completion_time = 0; // 또는 -1 (미완료 표시)
+        processes[i]->waiting_time    = 0;
+        processes[i]->turnaround_time = 0; // 또는 -1
     }
 }
 
-void runScheduler(Process processes[], int processCount, int algorithm)
+void runScheduler(Process* processes[], int processCount, int algorithm)
 {
     resetProcesses(processes, processCount);
 
@@ -88,5 +104,30 @@ void runScheduler(Process processes[], int processCount, int algorithm)
     default:
         printf("Invalid algorithm selected\n");
         break;
+    }
+}
+
+void IO_Operation(Queue *readyQueue, Queue *waitQueue)
+{
+    int initial_waitQueue_count = waitQueue->count;
+    if (initial_waitQueue_count == 0) {
+        return;
+    } // waitQueue에 처리할 프로세스 없음
+
+    for (int i = 0; i < initial_waitQueue_count; i++) {
+        Process *process = dequeue(waitQueue);
+        process->remaining_io_burst_time--;
+        if (process->remaining_io_burst_time == 0) {
+            process->current_io_index++;
+            process->status = READY;
+            if (!enqueue(readyQueue, process)) {
+                printf("Error enqueuing process\n");
+                return;
+            }
+        } else {
+            if (!enqueue(waitQueue, process)) {
+                printf("Error enqueuing process\n");
+            }
+        }
     }
 }

@@ -1,19 +1,8 @@
 # ninja log v6
-1	36	1746343004319982688	CMakeFiles/scheduler_simulator.dir/main.c.o	d68878108cf1d172
-2	34	1746343131318234734	CMakeFiles/scheduler_simulator.dir/queue.c.o	b25a05f55bf52a99
-2	30	1746343170169813518	CMakeFiles/scheduler_simulator.dir/main.c.o	d68878108cf1d172
-2	31	1746343170170226856	CMakeFiles/scheduler_simulator.dir/evaluateresults.c.o	38c5cd97749c2e3a
-1	27	1746343322272422707	CMakeFiles/scheduler_simulator.dir/scheduler.c.o	6287105a25ac0fc1
-27	56	1746343322298857220	scheduler_simulator	35d7227aa990608b
-0	25	1746343555614259062	CMakeFiles/scheduler_simulator.dir/scheduler.c.o	6287105a25ac0fc1
-25	54	1746343555639110393	scheduler_simulator	35d7227aa990608b
-1	27	1746343786616576330	CMakeFiles/scheduler_simulator.dir/scheduler.c.o	6287105a25ac0fc1
-27	54	1746343786642033604	scheduler_simulator	35d7227aa990608b
-1	28	1746343928794480126	CMakeFiles/scheduler_simulator.dir/scheduler.c.o	6287105a25ac0fc1
-28	55	1746343928821684201	scheduler_simulator	35d7227aa990608b
-1	27	1746343991883036589	CMakeFiles/scheduler_simulator.dir/scheduler.c.o	6287105a25ac0fc1
-27	53	1746343991909522504	scheduler_simulator	35d7227aa990608b
-2	31	1746344521571804845	CMakeFiles/scheduler_simulator.dir/scheduler.c.o	6287105a25ac0fc1
-2	33	1746344521571921719	CMakeFiles/scheduler_simulator.dir/evaluateresults.c.o	38c5cd97749c2e3a
-1	27	1746344535772900799	CMakeFiles/scheduler_simulator.dir/main.c.o	d68878108cf1d172
-27	55	1746344535799435672	scheduler_simulator	35d7227aa990608b
+34	64	1746425248246253140	scheduler_simulator	f6c31add481364c5
+0	39	1746424964932632997	CMakeFiles/scheduler_simulator.dir/scheduler.c.o	bb97ec0f3468ce5d
+2	34	1746425248213979469	CMakeFiles/scheduler_simulator.dir/evaluateresults.c.o	83a5bb1ca8b3b82a
+2	47	1746424476087995720	CMakeFiles/scheduler_simulator.dir/queue.c.o	7eff421d1c42787b
+1	32	1746424730943689153	CMakeFiles/scheduler_simulator.dir/main.c.o	44a4741fb9a04759
+1	44	1746425479837106963	build.ninja	fa5d9488adc259bb
+0	38	1746424964932884828	CMakeFiles/scheduler_simulator.dir/process.c.o	dd806e70711d6e67

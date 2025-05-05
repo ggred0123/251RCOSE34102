@@ -9,22 +9,21 @@
 
 int main()
 {
-    Process processes[] = {
-        // pid, arrivalTime, cpuBurstTime
-        {1, 0, 7},
-        {2, 2, 4},
-        {3, 4, 1},
-        {4, 5, 4}
-    };
+    int processNumber = 0;
+    scanf("%d",&processNumber);
+    Process* processes[processNumber];
+    for (int i = 0; i < processNumber; i++) {
+        processes[i] = createProcess(i);
+    }
 
     int processCount = sizeof(processes) / sizeof(processes[0]);
 
     printf("Initial Processes (%d): \n", processCount);
     for (int i = 0; i < processCount; i++) {
         printf("Process Id %d, Arrival Time %d, CPU Burst Time %d: \n",
-               processes[i].pid,
-               processes[i].arrival_time,
-               processes[i].cpu_burst_time);
+               processes[i]->pid,
+               processes[i]->arrival_time,
+               processes[i]->cpu_burst_time);
 
     }
 

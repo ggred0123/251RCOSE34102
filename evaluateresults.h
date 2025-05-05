@@ -8,7 +8,7 @@
 
 void calculateMetrics(Process *process);
 
-void printResults(Process processes[], int processCount, int algorithm);
+void printResults(Process* processes[], int processCount, int algorithm);
 
 
 
