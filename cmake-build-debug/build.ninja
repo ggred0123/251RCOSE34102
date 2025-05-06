@@ -79,6 +79,12 @@ build CMakeFiles/scheduler_simulator.dir/process.c.o: C_COMPILER__scheduler_simu
   OBJECT_DIR = CMakeFiles/scheduler_simulator.dir
   OBJECT_FILE_DIR = CMakeFiles/scheduler_simulator.dir
 
+build CMakeFiles/scheduler_simulator.dir/ganttchart.c.o: C_COMPILER__scheduler_simulator_unscanned_Debug /Users/kim-youngmin/251RCOSE34102/ganttchart.c || cmake_object_order_depends_target_scheduler_simulator
+  DEP_FILE = CMakeFiles/scheduler_simulator.dir/ganttchart.c.o.d
+  FLAGS = -g -std=gnu99 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk -fcolor-diagnostics
+  OBJECT_DIR = CMakeFiles/scheduler_simulator.dir
+  OBJECT_FILE_DIR = CMakeFiles/scheduler_simulator.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target scheduler_simulator
@@ -87,7 +93,7 @@ build CMakeFiles/scheduler_simulator.dir/process.c.o: C_COMPILER__scheduler_simu
 #############################################
 # Link the executable scheduler_simulator
 
-build scheduler_simulator: C_EXECUTABLE_LINKER__scheduler_simulator_Debug CMakeFiles/scheduler_simulator.dir/main.c.o CMakeFiles/scheduler_simulator.dir/scheduler.c.o CMakeFiles/scheduler_simulator.dir/queue.c.o CMakeFiles/scheduler_simulator.dir/evaluateresults.c.o CMakeFiles/scheduler_simulator.dir/process.c.o
+build scheduler_simulator: C_EXECUTABLE_LINKER__scheduler_simulator_Debug CMakeFiles/scheduler_simulator.dir/main.c.o CMakeFiles/scheduler_simulator.dir/scheduler.c.o CMakeFiles/scheduler_simulator.dir/queue.c.o CMakeFiles/scheduler_simulator.dir/evaluateresults.c.o CMakeFiles/scheduler_simulator.dir/process.c.o CMakeFiles/scheduler_simulator.dir/ganttchart.c.o
   FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk
   OBJECT_DIR = CMakeFiles/scheduler_simulator.dir
   POST_BUILD = :

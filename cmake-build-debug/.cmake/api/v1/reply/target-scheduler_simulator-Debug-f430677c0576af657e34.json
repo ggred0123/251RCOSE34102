@@ -53,7 +53,8 @@
 				1,
 				2,
 				3,
-				4
+				4,
+				5
 			]
 		}
 	],
@@ -90,13 +91,7 @@
 				1,
 				2,
 				3,
-				4
-			]
-		},
-		{
-			"name" : "Header Files",
-			"sourceIndexes" : 
-			[
+				4,
 				5
 			]
 		}
@@ -135,8 +130,9 @@
 		},
 		{
 			"backtrace" : 1,
-			"path" : "ganttchart.h",
-			"sourceGroupIndex" : 1
+			"compileGroupIndex" : 0,
+			"path" : "ganttchart.c",
+			"sourceGroupIndex" : 0
 		}
 	],
 	"type" : "EXECUTABLE"

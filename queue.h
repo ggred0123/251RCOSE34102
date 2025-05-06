@@ -26,4 +26,14 @@ bool enqueue(Queue *queue, Process *process);
 // 큐 맨 앞에서 프로세스 제거하고 반환하는 함수.. 큐 비어있으면 NULL 반환
 Process *dequeue(Queue *queue);
 
+bool enqueue_for_sjf(Queue *queue, Process *process);
+
+bool enqueue_for_priority(Queue *queue, Process *process);
+
+bool enqueue_for_lif(Queue *queue, Process *process);
+
+bool enqueue_for_lisc(Queue *queue, Process *process);
+
+
 #endif // QUEUE_H
+

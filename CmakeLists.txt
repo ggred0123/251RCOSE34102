@@ -11,9 +11,8 @@ add_executable(scheduler_simulator        # 생성될 실행 파일 이름
         scheduler.c
         queue.c
         evaluateresults.c
-        # 만약 process.c 파일도 있다면 추가:
-         process.c
-        ganttchart.h
+        process.c
+        ganttchart.c
 )
 
 # 필요하다면 다른 라이브러리 링크 등 추가 설정

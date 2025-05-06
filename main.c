@@ -6,24 +6,30 @@
 #include "process.h"
 #include "scheduler.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 int main()
 {
     int processNumber = 0;
     scanf("%d",&processNumber);
-    Process* processes[processNumber];
+
+    if (processNumber>100) {
+        perror(" too many process!");
+        return -1;
+    }
+    Process *jobqueue[processNumber];
+
     for (int i = 0; i < processNumber; i++) {
-        processes[i] = createProcess(i);
+        jobqueue[i] = createProcess(i + 1);  // PID는 1부터 시작
     }
 
-    int processCount = sizeof(processes) / sizeof(processes[0]);
 
-    printf("Initial Processes (%d): \n", processCount);
-    for (int i = 0; i < processCount; i++) {
+    printf("Initial Processes (%d): \n", processNumber);
+    for (int i = 0; i < processNumber; i++) {
         printf("Process Id %d, Arrival Time %d, CPU Burst Time %d: \n",
-               processes[i]->pid,
-               processes[i]->arrival_time,
-               processes[i]->cpu_burst_time);
+               jobqueue[i]->pid,
+               jobqueue[i]->arrival_time,
+               jobqueue[i]->cpu_burst_time);
 
     }
 
@@ -33,15 +39,33 @@ int main()
     printf("1- FCFS\n");
     printf("2- SJF\n");
     printf("3- RR\n");
+    printf("4- Priority\n");
+    printf("5- PreemtiveSJF\n");
+    printf("6- PreemtivePriority\n");
+    printf("7- RoundRobinWithPriority\n");
+    printf("8 -LongestIOFirst\n");
+    printf("9 -PreemptiveLongestIOFirst\n");
+    printf("10 -MultiLevelQueue\n");
+    printf("11- Priority-based Lottery Scheduling\n");
+
+
+
+
+
+
+
+
+
+
     int selectedAlgorithm = 0;
 
     scanf("%d", &selectedAlgorithm);
 
-    runScheduler(processes, processCount, selectedAlgorithm);// 스케줄러 run
+    runScheduler(jobqueue, processNumber, selectedAlgorithm);// 스케줄러 run
 
 
 
-    printResults(processes, processCount, selectedAlgorithm);// 결과 출력
+    printResults(jobqueue, processNumber, selectedAlgorithm);// 결과 출력
     return 0;
 }
 
