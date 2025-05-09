@@ -12,15 +12,14 @@ Process *createProcess(const int pid)
     }
     process->pid = pid;
 
-    srand(time(NULL) +
-          pid); // rand 를 위한 시드.. 근데 이제 time(NULL) 만 넣으면 빠르게 생성할 때 겹칠 수도..?
+    srand(time(NULL) + pid*3); // rand 를 위한 시드.. 근데 이제 time(NULL) 만 넣으면 빠르게 생성할 때 겹칠 수도..?
 
     // 기본 정보 랜덤 생성
     process->arrival_time             = rand() % ARRIVAL_TIME_DIVIDER + 1;
     process->cpu_burst_time           = rand()% CPU_BURST_TIME_DIVIDER + 1;
     process->remaining_cpu_burst_time = process->cpu_burst_time;
-    process->io_count                 = rand() % (MAX_IO_OPERATIONS + 1);
-    process->priority = rand() % PRIORITY_DIVIDER+1;
+    process->io_count                 = rand() % (MAX_IO_OPERATIONS );
+    process->priority = rand() % PRIORITY_DIVIDER +1;
 
     int recent_IO = 0; // 이전 IO 발생 시점
 
@@ -38,7 +37,7 @@ Process *createProcess(const int pid)
         process->io_trigger[i]     = next_IO + rand() % (max_possible_IO - next_IO +
                                                      1); // IO 발생 시간 결정(가능한 범위 내에서)
         recent_IO                  = process->io_trigger[i];
-        process->io_burst_times[i] = rand() % (IO_BURST_TIME_DIVIDER + 1);
+        process->io_burst_times[i] = rand() % (IO_BURST_TIME_DIVIDER) + 1;
     }
 
     for (int i = 0; i < process->io_count; i++) {
@@ -62,5 +61,6 @@ void ProcessInformation(const Process *process)
     printf("Arrival Time: %d\n", process->arrival_time);
     printf("CPU Burst Time: %d\n", process->cpu_burst_time);
     printf("IO Burst Time: %d\n", process->io_burst_time);
+    printf("Priority: %d\n", process->priority);
 
 }

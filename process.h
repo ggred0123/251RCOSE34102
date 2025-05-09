@@ -3,7 +3,7 @@
 #define PROCESS_H
 #define CPU_BURST_TIME_DIVIDER 7
 #define ARRIVAL_TIME_DIVIDER 10
-#define PRIORITY_DIVIDER 10
+#define PRIORITY_DIVIDER 6
 #define MAX_IO_OPERATIONS 3
 #define IO_BURST_TIME_DIVIDER 3
 
@@ -15,7 +15,7 @@ typedef struct Process
     int    arrival_time;
     int    cpu_burst_time;           // cpu burst time
     int    remaining_cpu_burst_time; // 남아있는 cpu burst
-
+    int    time_entered_ready; // 프로세스가 마지막으로 Ready Queue에 들어간 시간 hrrn위해서 설정
     int    io_burst_time;
     int    remaining_io_burst_time;
     int    current_io_index;

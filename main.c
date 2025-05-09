@@ -26,10 +26,12 @@ int main()
 
     printf("Initial Processes (%d): \n", processNumber);
     for (int i = 0; i < processNumber; i++) {
-        printf("Process Id %d, Arrival Time %d, CPU Burst Time %d: \n",
+        printf("Process Id %d, Arrival Time %d, CPU Burst Time %d. Priority: %d\n",
                jobqueue[i]->pid,
                jobqueue[i]->arrival_time,
-               jobqueue[i]->cpu_burst_time);
+               jobqueue[i]->cpu_burst_time,
+               jobqueue[i]->priority);
+
 
     }
 
@@ -43,10 +45,13 @@ int main()
     printf("5- PreemtiveSJF\n");
     printf("6- PreemtivePriority\n");
     printf("7- RoundRobinWithPriority\n");
-    printf("8 -LongestIOFirst\n");
-    printf("9 -PreemptiveLongestIOFirst\n");
-    printf("10 -MultiLevelQueue\n");
-    printf("11- Priority-based Lottery Scheduling\n");
+    printf("8 - LongestIOFirst\n");
+    printf("9 - PreemptiveLongestIOFirst\n");
+    printf("10 - MultiLevelQueue\n");
+    printf("11 - Priority-based Lottery Scheduling\n");
+    printf("12 - LongestIOShortestCPU Scheduling\n");
+    printf("13 - PreemptiveLongestIOShortestCPU\n");
+    printf("14 - HRRN\n");
 
 
 

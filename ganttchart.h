@@ -6,7 +6,7 @@
 #define GANTTCHART_H
 #include "process.h"
 #define MAX_TIME 500
-#define MAX_GANTTCHART_LOG 500
+#define MAX_GANTTCHART_LOG 5000
 typedef struct GanttChartLog
 {
     int startTime;

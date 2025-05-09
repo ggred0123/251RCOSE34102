@@ -17,8 +17,7 @@
 #define LOTTERY 11
 #define LongestIOShortestCPU 12
 #define PreemptiveLongestIOShortestCPU 13
-#define AgingPriority 14
-#define MultiLevelFeedbackQueue 15
+#define HRRN 14
 
 
 //메인 스케줄러 함수로 지정된 알고리즘으로 프로세스들 스케줄링 해준다. 위에 define으로 여기서는 Int로 들어가고 입력시에는 알아보기 쉽게 이름으로
@@ -36,7 +35,6 @@ void runPreemptiveSJF(Process* processes[], int processCount);
 
 void runRoundRobinWithPriority(Process* processes[], int processCount);
 
-void runPreemptivePriority(Process* processes[], int processCount);
 
 void runLongestIOFirst(Process* processes[], int processCount);
 
@@ -49,16 +47,28 @@ void runMultiLevelQueue(Process* processes[], int processCount);
 void resetProcesses(Process* processes[], int processCount);
 
 //IO 작업 처리
-void IO_Operation(Queue *readyQueue, Queue *waitQueue);
+void IO_Operation(Queue *readyQueue, Queue *waitQueue,int *terminatedCount, int *currentTime);
 
-void IO_Operation_SJF(Queue *readyQueue, Queue *waitQueue);
+void IO_Operation_SJF(Queue *readyQueue, Queue *waitQueue, int *terminatedCount, int *currentTime);
 
-void IO_Operation_Priority(Queue *readyQueue, Queue *waitQueue);
+void IO_Operation_Priority(Queue *readyQueue, Queue *waitQueue, int *terminatedCount, int *currentTime);
 
-void IO_Operation_LIF(Queue *readyQueue, Queue *waitQueue);
+void IO_Operation_LIF(Queue *readyQueue, Queue *waitQueue, int *terminatedCount, int *currentTime);
 
-void IO_Operation_LISC(&readyQueue, &waitQueue);
+void IO_Operation_LISC(Queue *readyQueue, Queue *waitQueue, int *terminatedCount, int *currentTime);
+
+void IO_Operation_HRRN(Queue *readyQueue, Queue *waitQueue, int currentTime, int *terminatedCount);
+
+typedef bool (*EnqueueFunction)(Queue*, Process*);
 
 
+void IO_Operation_Base(
+    Queue *readyQueue,
+    Queue *waitQueue,
+    bool (*enqueueFunc)(Queue*, Process*),
+    int currentTime,
+    bool useCurrentTime,
+    const char *algorithmName,
+    int *terminatedCount);
 
 #endif //SCHEDULER_H
