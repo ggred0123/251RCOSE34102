@@ -220,10 +220,7 @@ void runSJFCombined(Process* processes[], int processCount, bool isPreemptive) {
                     }
 
                     runningProcess = NULL; // CPU가 비게 됨, 다음 단계에서 새 프로세스 선택
-                    // previousPID = -1; // Will be set when new process runs or stays idle
-                                      // Setting previousPID to the preempted process PID or -1 for IDLE handling
-                                      // is important. If we set to -1, it ensures IDLE log is properly handled.
-                                      // If we set to the preempted PID, the next if(runningProcess == NULL) will pick shortest.
+
                 }
             }
         }
@@ -322,9 +319,7 @@ void runSJFCombined(Process* processes[], int processCount, bool isPreemptive) {
             // 또는, 이전 IDLE 로그가 이미 현재 시간에 시작된 것이 아니라면.
             if (ganttEntryCount == 0 || (ganttLogArray[ganttEntryCount-1].pid != -1 && ganttLogArray[ganttEntryCount-1].endTime != 0) ||
                 (ganttLogArray[ganttEntryCount-1].pid == -1 && ganttLogArray[ganttEntryCount-1].startTime != currentTime && ganttLogArray[ganttEntryCount-1].endTime == 0) ) {
-                 // This condition is tricky. The original FCFS started an IDLE log initially and updated its end time.
-                 // If the last active log was a process, and it just ended (endTime set), a new IDLE log should start.
-                 // If the last log was already IDLE and still current (endTime=0), do nothing.
+
                  if (ganttEntryCount > 0 && ganttLogArray[ganttEntryCount-1].pid != -1 && ganttLogArray[ganttEntryCount-1].endTime != 0) {
                      // Previous was a process and it has ended. Start new IDLE.
                      ganttLogArray[ganttEntryCount].startTime = currentTime;
@@ -338,8 +333,6 @@ void runSJFCombined(Process* processes[], int processCount, bool isPreemptive) {
                      ganttLogArray[ganttEntryCount].endTime = 0;
                      ganttEntryCount++;
                  }
-                 // If the current log is already an open IDLE log, we don't need to start a new one.
-                 // The initial IDLE log handles the t=0 case.
             }
             previousPID = -1; // CPU is IDLE
         }
@@ -355,17 +348,13 @@ void runSJFCombined(Process* processes[], int processCount, bool isPreemptive) {
 
     // 유효하지 않은 로그 항목 제거 (시작 시간과 종료 시간이 같은 항목)
     int validLogs = 0;
-    GanttChartLog finalGanttLogs[MAX_GANTTCHART_LOG]; // Use a temporary array for valid logs
     for (int i = 0; i < ganttEntryCount; i++) {
         if (ganttLogArray[i].startTime < ganttLogArray[i].endTime) {
-            finalGanttLogs[validLogs++] = ganttLogArray[i];
-        } else if (ganttLogArray[i].pid == -1 && ganttLogArray[i].startTime == ganttLogArray[i].endTime && ganttLogArray[i].startTime == currentTime && terminatedCount == processCount){
-            // Special case: if the very last action was a process termination at 'currentTime',
-            // an IDLE log might have been prepared for 'currentTime' but it's immediately the end.
-            // Don't add this zero-duration IDLE log at the very end of simulation.
-        } else if (ganttLogArray[i].pid != -1 && ganttLogArray[i].startTime == ganttLogArray[i].endTime) {
-            // Also remove zero-duration process logs, though less likely with ++currentTime logic
-             finalGanttLogs[validLogs++] = ganttLogArray[i]; // Or skip if truly 0 duration
+            // 유효한 로그만 유지
+            if (i != validLogs) {
+                ganttLogArray[validLogs] = ganttLogArray[i];
+            }
+            validLogs++;
         }
     }
 
@@ -377,7 +366,7 @@ void runSJFCombined(Process* processes[], int processCount, bool isPreemptive) {
     }
     printf("Valid gantt chart logs: %d\n", validLogs);
 
-    drawGanttChart(finalGanttLogs, validLogs); // [cite: 10] for drawGanttChart usage
+    drawGanttChart(ganttLogArray, validLogs); // [cite: 10] for drawGanttChart usage
 }
 
 
@@ -540,6 +529,35 @@ void runRoundRobin(Process* processes[], int processCount)
                 runningProcess = NULL;
                 quantumCounter = 0;
                 previousPID = -1; // IDLE 상태로 변경
+            }
+            else { // CPU is IDLE
+                // 이전에 IDLE 로그를 즉시 시작하는 로직(프로세스 종료/IO시)과 중복될 수 있으므로,
+                // 현재 시간에서 IDLE 로그가 이미 열려있지 않은 경우에만 새로 시작하거나 기존 IDLE을 이어간다.
+                if (terminatedCount < processCount) { // 모든 프로세스가 종료된게 아니라면 IDLE 가능
+                    // 마지막 로그가 IDLE 이고 아직 열려있는지 확인 (endTime == 0)
+                    // 또한, 그 열린 IDLE이 현재 시간에 시작된 것인지, 아니면 이전부터 이어져 온 것인지 확인.
+                    bool needToStartNewIdleLog = true;
+                    if (ganttEntryCount > 0) {
+                        if (ganttLogArray[ganttEntryCount - 1].pid == -1 && ganttLogArray[ganttEntryCount - 1].endTime == 0) {
+                            // 이미 IDLE 로그가 열려있음. 새로 시작할 필요 없음.
+                            needToStartNewIdleLog = false;
+                        }
+                        // 만약 이전 로그가 프로세스였고, 아직 닫히지 않았다면 (이런일은 없어야 함, 위에서 닫혔어야 함)
+                        // 여기서 닫고 새 IDLE 시작
+                        else if (ganttLogArray[ganttEntryCount-1].pid != -1 && ganttLogArray[ganttEntryCount-1].endTime == 0) {
+                            ganttLogArray[ganttEntryCount-1].endTime = currentTime; // 여기서 현재 시간으로 닫음.
+                        }
+                    }
+
+
+                    // 새로운 IDLE 로그가 필요하고, 이전 로그가 (현재시간에 시작된 열린 IDLE이 아닌) 다른 것이라면.
+                    if (needToStartNewIdleLog) {
+                        ganttLogArray[ganttEntryCount].startTime = currentTime;
+                        ganttLogArray[ganttEntryCount].pid = -1;
+                        ganttLogArray[ganttEntryCount].endTime = 0;
+                        ganttEntryCount++;
+                    }
+                }
             }
         }
 
@@ -770,7 +788,7 @@ void runPriorityCombined(Process* processes[], int processCount, bool isPreempti
                     }
                 }
             }
-        } else { // CPU is IDLE (runningProcess == NULL)
+        } else { // CPU is IDLE
             // 이전에 IDLE 로그를 즉시 시작하는 로직(프로세스 종료/IO시)과 중복될 수 있으므로,
             // 현재 시간에서 IDLE 로그가 이미 열려있지 않은 경우에만 새로 시작하거나 기존 IDLE을 이어간다.
             if (terminatedCount < processCount) { // 모든 프로세스가 종료된게 아니라면 IDLE 가능
@@ -1128,7 +1146,7 @@ void runLIFCombined(Process* processes[], int processCount, bool isPreemptive) {
 
             if (runningProcess) {
                 runningProcess->status = RUNNING; // 상태를 RUNNING으로 변경
-                printf("시간 %d: 프로세스 %d 실행 시작 (총 IO: %d, 남은 CPU: %d)\n",
+                printf("Time %d: Process %d RUNNING (Total IO: %d, Remaining CPU: %d)\n",
                        currentTime, runningProcess->pid, runningProcess->io_burst_time, runningProcess->remaining_cpu_burst_time);
 
                 // 이전 로그가 IDLE 상태였다면 IDLE 로그 종료
@@ -1155,7 +1173,7 @@ void runLIFCombined(Process* processes[], int processCount, bool isPreemptive) {
                 runningProcess->status = TERMINATED; // 상태를 TERMINATED로 변경
                 runningProcess->completion_time = currentTime + 1; // 종료 시간 기록 (다음 시간 단위 시작 시점)
                 terminatedCount++; // 종료된 프로세스 수 증가
-                printf("시간 %d: 프로세스 %d 종료됨\n", currentTime + 1, runningProcess->pid);
+                printf("Time %d: Process %d TERMINATED\n", currentTime + 1, runningProcess->pid);
 
                 ganttLogArray[ganttEntryCount-1].endTime = currentTime + 1; // 현재 프로세스 간트 차트 로그 종료
                 runningProcess = NULL; // CPU 비움
@@ -1584,28 +1602,21 @@ Process* selectProcessByLottery(Queue* readyQueue) {
         return NULL;
     }
 
+    // 1. 티켓 수에 따른 프로세스 선택 확률 계산
     int totalTickets = 0;
-    // Process 포인터를 저장할 배열, 각 인덱스가 티켓 번호를 의미
-    Process* ticketToProcessMap[MAX_TOTAL_TICKETS_POSSIBLE];
+    Process* processes[MAX_QUEUE_CAPACITY];
+    int tickets[MAX_QUEUE_CAPACITY];
+    int count = 0;
 
-    // 1단계: 티켓 계산 및 매핑 (큐를 직접 순회)
-    // readyQueue를 직접 순회하며 티켓 정보를 수집 (dequeue/enqueue 최소화)
+    // 큐에서 모든 프로세스와 티켓 정보 수집
     int current_idx = readyQueue->front;
     for (int i = 0; i < readyQueue->count; i++) {
         Process* proc = readyQueue->items[current_idx];
-        if (!proc) { // 혹시 모를 NULL 포인터 방지
-            current_idx = (current_idx + 1) % MAX_QUEUE_CAPACITY;
-            continue;
-        }
-
-        int tickets = calculateTickets(proc->priority);
-        for (int t = 0; t < tickets; t++) {
-            if (totalTickets < MAX_TOTAL_TICKETS_POSSIBLE) {
-                ticketToProcessMap[totalTickets++] = proc;
-            } else {
-                fprintf(stderr, "Error: Maximum number of tickets exceeded.\n");
-                return NULL; // 티켓 배열 오버플로우
-            }
+        if (proc) {
+            processes[count] = proc;
+            tickets[count] = calculateTickets(proc->priority);
+            totalTickets += tickets[count];
+            count++;
         }
         current_idx = (current_idx + 1) % MAX_QUEUE_CAPACITY;
     }
@@ -1614,34 +1625,45 @@ Process* selectProcessByLottery(Queue* readyQueue) {
         return NULL;
     }
 
-    // 난수 생성기 시드 설정 (프로그램 시작 시 한 번만 하는 것이 더 좋을 수 있음)
-    // srand(time(NULL)); // 매번 호출하면 동일 시간 내 호출 시 같은 패턴 발생 가능
+    // 2. 당첨 티켓 선택
+    int winningTicket = rand() % totalTickets;
 
-    int winningTicketNumber = rand() % totalTickets;
-    Process* selectedProcess = ticketToProcessMap[winningTicketNumber];
+    // 3. 당첨 프로세스 찾기
+    int ticketCounter = 0;
+    Process* selectedProcess = NULL;
 
-    // 2단계: 선택된 프로세스를 readyQueue에서 제거
+    for (int i = 0; i < count; i++) {
+        ticketCounter += tickets[i];
+        if (winningTicket < ticketCounter) {
+            selectedProcess = processes[i];
+            break;
+        }
+    }
+
+    if (!selectedProcess) {
+        return NULL; // 이 부분에 도달하면 안 됨
+    }
+
+    // 4. 안전하게 큐에서 선택된 프로세스 제거 (원래 코드 방식)
     Queue tempQueue;
     initialize_queue(&tempQueue);
-    Process * actuallySelectedAndRemovedProc = NULL;
+    Process* actuallySelectedAndRemovedProc = NULL;
 
     while (!isEmpty(readyQueue)) {
-        Process *dequeuedProc = dequeue(readyQueue);
+        Process* dequeuedProc = dequeue(readyQueue);
         if (dequeuedProc == selectedProcess && !actuallySelectedAndRemovedProc) {
-            // 선택된 프로세스를 찾았고, 아직 "제거" 처리 전이면 이 프로세스를 반환 대상으로 설정
             actuallySelectedAndRemovedProc = dequeuedProc;
         } else {
-            // 선택된 프로세스가 아니거나, 이미 선택된 프로세스 인스턴스를 찾은 후 동일 포인터의 다른 (가상의) 복사본이라면 임시 큐로 이동
             enqueue(&tempQueue, dequeuedProc);
         }
     }
 
-    // 임시 큐의 내용을 다시 readyQueue로 복원 (선택된 프로세스는 제외됨)
+    // 임시 큐의 내용을 다시 readyQueue로 복원
     while (!isEmpty(&tempQueue)) {
         enqueue(readyQueue, dequeue(&tempQueue));
     }
 
-    return actuallySelectedAndRemovedProc; // "제거"된 프로세스 반환
+    return actuallySelectedAndRemovedProc;
 }
 
 void runLotteryScheduling(Process* processes[], int processCount)
@@ -1811,9 +1833,9 @@ void runLISCCombined(Process* processes[], int processCount, bool isPreemptive) 
     initialize_queue(&waitQueue);  // 대기 큐 초기화
 
     if (isPreemptive) {
-        printf("통합 선점형 LISC (Longest IO, Shortest CPU) 스케줄링 시뮬레이션 시작-----------\n");
+        printf("Combined Preemptive LISC (Longest IO, Shortest CPU) Scheduling Simulation STARTED-----------\n");
     } else {
-        printf("통합 비선점형 LISC (Longest IO, Shortest CPU) 스케줄링 시뮬레이션 시작-----------\n");
+        printf("Combined Non-Preemptive LISC (Longest IO, Shortest CPU) Scheduling Simulation STARTED-----------\n");
     }
 
     // 모든 프로세스가 종료될 때까지 시뮬레이션 루프 실행
@@ -1826,9 +1848,9 @@ void runLISCCombined(Process* processes[], int processCount, bool isPreemptive) 
                 processes[i]->status = READY;
                 // enqueue_for_lisc 함수는 총 I/O 시간 (긴 순) -> 남은 CPU 시간 (짧은 순) 기준으로 정렬
                 if (!enqueue_for_lisc(&readyQueue, processes[i])) {
-                    fprintf(stderr, "[오류] LISC: P%d 도착 시 준비 큐 가득 참 (시간: %d)!\n", processes[i]->pid, currentTime);
+                    fprintf(stderr, "[Error] LISC: Ready queue full for P%d at time %d!\n", processes[i]->pid, currentTime);
                 }
-                printf("시간 %d: 프로세스 %d 도착 (총 IO: %d, CPU 시간: %d)\n",
+                printf("Time %d: Process %d ARRIVED (Total IO: %d, CPU Burst: %d)\n",
                        currentTime, processes[i]->pid, processes[i]->io_burst_time, processes[i]->remaining_cpu_burst_time);
                 newEventOccurred = true;
             }
@@ -1860,7 +1882,7 @@ void runLISCCombined(Process* processes[], int processCount, bool isPreemptive) 
                     }
 
                     if (shouldPreempt) {
-                        printf("시간 %d: 프로세스 %d (IO: %d, CPU: %d) 선점됨. 선점자: 프로세스 %d (IO: %d, CPU: %d)\n",
+                        printf("Time %d: Process %d (IO: %d, CPU: %d) PREEMPTED by Process %d (IO: %d, CPU: %d)\n",
                                currentTime,
                                runningProcess->pid, runningProcess->io_burst_time, runningProcess->remaining_cpu_burst_time,
                                candidateProcess->pid, candidateProcess->io_burst_time, candidateProcess->remaining_cpu_burst_time);
@@ -1872,7 +1894,7 @@ void runLISCCombined(Process* processes[], int processCount, bool isPreemptive) 
 
                         runningProcess->status = READY; // 상태를 READY로 변경
                         if (!enqueue_for_lisc(&readyQueue, runningProcess)) { // 선점된 프로세스를 준비 큐에 다시 추가 (LISC 순서로 정렬)
-                            fprintf(stderr, "[오류] LISC: 선점 시 준비 큐 가득 참 (시간: %d)!\n", currentTime);
+                            fprintf(stderr, "[Error] LISC: Ready queue full during preemption at time %d!\n", currentTime);
                         }
                         runningProcess = NULL; // CPU 비움
                     }
@@ -1933,13 +1955,13 @@ void runLISCCombined(Process* processes[], int processCount, bool isPreemptive) 
                 runningProcess->remaining_io_burst_time = runningProcess->io_burst_times[runningProcess->current_io_index];
                 runningProcess->status = WAITING;
 
-                printf("시간 %d: 프로세스 %d I/O 요청 (I/O 시간: %d)\n",
+                printf("Time %d: Process %d requests I/O (Duration: %d)\n",
                        currentTime + 1, runningProcess->pid, runningProcess->remaining_io_burst_time);
 
                 ganttLogArray[ganttEntryCount-1].endTime = currentTime + 1;
 
                 if (!enqueue(&waitQueue, runningProcess)) { // 대기 큐는 FCFS
-                    fprintf(stderr, "[오류] LISC: P%d I/O 요청 시 대기 큐 가득 참 (시간: %d)!\n", runningProcess->pid, currentTime);
+                    fprintf(stderr, "[Error] LISC: Wait queue full for P%d at time %d!\n", runningProcess->pid, currentTime);
                 }
                 runningProcess = NULL;
                 previousPID = -1;
@@ -1991,11 +2013,11 @@ void runLISCCombined(Process* processes[], int processCount, bool isPreemptive) 
 
     // 시뮬레이션 종료 메시지
     if (isPreemptive) {
-        printf("통합 선점형 LISC 스케줄링 시뮬레이션 완료 (시간: %d)-----------\n", currentTime);
+        printf("Combined Preemptive LISC Scheduling Simulation COMPLETED at time %d-----------\n", currentTime);
     } else {
-        printf("통합 비선점형 LISC 스케줄링 시뮬레이션 완료 (시간: %d)-----------\n", currentTime);
+        printf("Combined Non-Preemptive LISC Scheduling Simulation COMPLETED at time %d-----------\n", currentTime);
     }
-    printf("유효한 간트 차트 로그 수: %d\n", validLogs);
+    printf("Valid gantt chart logs: %d\n", validLogs);
     drawGanttChart(finalGanttLogs, validLogs); // 간트 차트 출력
 }
 
@@ -2290,7 +2312,7 @@ void IO_Operation(Queue *readyQueue, Queue *waitQueue, int *terminatedCount, int
             continue;
         }
 
-        process->remaining_io_burst_time--;
+
         if (process->remaining_io_burst_time <= 0) {
             process->current_io_index++;
 
@@ -2321,6 +2343,7 @@ void IO_Operation(Queue *readyQueue, Queue *waitQueue, int *terminatedCount, int
                 printf("Error re-enqueuing process to waitQueue\n");
             }
         }
+        process->remaining_io_burst_time--;
     }
 }
 

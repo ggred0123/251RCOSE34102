@@ -23,15 +23,11 @@ typedef struct Process
     int    io_count;
     int    io_trigger[MAX_IO_OPERATIONS];
     int    io_burst_times[MAX_IO_OPERATIONS];
-
-
-
     Status status;
     int    waiting_time;
     int    turnaround_time;
     int    completion_time;
-
-    int     priority;
+    int    priority;
 
 
 } Process;

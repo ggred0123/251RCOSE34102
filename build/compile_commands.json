@@ -1,0 +1,38 @@
+[
+{
+  "directory": "/Users/kim-youngmin/251RCOSE34102/build",
+  "command": "/usr/bin/clang   -g -std=gnu99 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.4.sdk -o CMakeFiles/scheduler_simulator.dir/main.c.o -c /Users/kim-youngmin/251RCOSE34102/main.c",
+  "file": "/Users/kim-youngmin/251RCOSE34102/main.c",
+  "output": "CMakeFiles/scheduler_simulator.dir/main.c.o"
+},
+{
+  "directory": "/Users/kim-youngmin/251RCOSE34102/build",
+  "command": "/usr/bin/clang   -g -std=gnu99 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.4.sdk -o CMakeFiles/scheduler_simulator.dir/scheduler.c.o -c /Users/kim-youngmin/251RCOSE34102/scheduler.c",
+  "file": "/Users/kim-youngmin/251RCOSE34102/scheduler.c",
+  "output": "CMakeFiles/scheduler_simulator.dir/scheduler.c.o"
+},
+{
+  "directory": "/Users/kim-youngmin/251RCOSE34102/build",
+  "command": "/usr/bin/clang   -g -std=gnu99 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.4.sdk -o CMakeFiles/scheduler_simulator.dir/queue.c.o -c /Users/kim-youngmin/251RCOSE34102/queue.c",
+  "file": "/Users/kim-youngmin/251RCOSE34102/queue.c",
+  "output": "CMakeFiles/scheduler_simulator.dir/queue.c.o"
+},
+{
+  "directory": "/Users/kim-youngmin/251RCOSE34102/build",
+  "command": "/usr/bin/clang   -g -std=gnu99 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.4.sdk -o CMakeFiles/scheduler_simulator.dir/evaluateresults.c.o -c /Users/kim-youngmin/251RCOSE34102/evaluateresults.c",
+  "file": "/Users/kim-youngmin/251RCOSE34102/evaluateresults.c",
+  "output": "CMakeFiles/scheduler_simulator.dir/evaluateresults.c.o"
+},
+{
+  "directory": "/Users/kim-youngmin/251RCOSE34102/build",
+  "command": "/usr/bin/clang   -g -std=gnu99 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.4.sdk -o CMakeFiles/scheduler_simulator.dir/process.c.o -c /Users/kim-youngmin/251RCOSE34102/process.c",
+  "file": "/Users/kim-youngmin/251RCOSE34102/process.c",
+  "output": "CMakeFiles/scheduler_simulator.dir/process.c.o"
+},
+{
+  "directory": "/Users/kim-youngmin/251RCOSE34102/build",
+  "command": "/usr/bin/clang   -g -std=gnu99 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.4.sdk -o CMakeFiles/scheduler_simulator.dir/ganttchart.c.o -c /Users/kim-youngmin/251RCOSE34102/ganttchart.c",
+  "file": "/Users/kim-youngmin/251RCOSE34102/ganttchart.c",
+  "output": "CMakeFiles/scheduler_simulator.dir/ganttchart.c.o"
+}
+]
