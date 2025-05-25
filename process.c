@@ -29,20 +29,20 @@ Process *createProcess(const int pid)
         int next_IO         = recent_IO + 1;
         int max_possible_IO = process->cpu_burst_time - 1;
 
-        if (next_IO > max_possible_IO) {
+        if (next_IO >= max_possible_IO) {
             process->io_count = i;
             break;
-        } // io_count 재조정.. 뭔가 잘못된 상황에서도 정상적으로 작동할 수 있게
+        } // io_count 재조정.. 범위 안에서 랜덤으로 결정되기에 처음부터 cpu burst 끝에 IO 가 할당될 수 있음..
 
         process->io_trigger[i]     = next_IO + rand() % (max_possible_IO - next_IO +
-                                                     1); // IO 발생 시간 결정(가능한 범위 내에서)
+                                                     1); // IO 발생 시간 결정(가능한 범위 내에서 오름 차순으로 결정하기 위해서 이렇게 함)
         recent_IO                  = process->io_trigger[i];
         process->io_burst_times[i] = rand() % (IO_BURST_TIME_DIVIDER) + 1;
     }
 
     for (int i = 0; i < process->io_count; i++) {
         process->io_burst_time+= process->io_burst_times[i];
-    }
+    }//총 io_burst_time 계산
 
 
     process->current_io_index     = 0;

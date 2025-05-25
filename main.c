@@ -10,7 +10,7 @@
 
 int main()
 {
-    /*int processNumber = 0;
+    int processNumber = 0;
     scanf("%d",&processNumber);
 
     if (processNumber>100) {
@@ -33,8 +33,8 @@ int main()
                jobqueue[i]->priority);
 
 
-    }*/
-
+    }
+/*
     Process processes[5] = {
     // P1
     {
@@ -47,9 +47,9 @@ int main()
         .remaining_io_burst_time = 1,
         .current_io_index = 0,
         .cpu_time_used = 0,
-        .io_count = 1,
-        .io_trigger = {3, 0, 0},
-        .io_burst_times = {1, 0, 0},
+        .io_count = 2,
+        .io_trigger = {3, 5, 0},
+        .io_burst_times = {1, 3, 0},
         .status = NEW,
         .waiting_time = 0,
         .turnaround_time = 0,
@@ -131,9 +131,9 @@ int main()
         .remaining_io_burst_time = 1,
         .current_io_index = 0,
         .cpu_time_used = 0,
-        .io_count = 1,
-        .io_trigger = {1, 0, 0},
-        .io_burst_times = {1, 0, 0},
+        .io_count = 2,
+        .io_trigger = {1, 2, 0},
+        .io_burst_times = {1, 3, 0},
         .status = NEW,
         .waiting_time = 0,
         .turnaround_time = 0,
@@ -147,7 +147,7 @@ int main()
     for (int i = 0; i < 5; i++) {
         jobqueue[i] = &processes[i];
     }
-    int processNumber = 5;
+    int processNumber = 5;*/
 
 
     printf("----------------------------------\n");

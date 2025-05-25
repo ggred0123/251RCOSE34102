@@ -50,7 +50,7 @@ bool enqueue_for_sjf(Queue *queue, Process *process) {
     if (isFull(queue)) {
         return false;
     }
-
+    //없으면 그냥 들어가자
     if (isEmpty(queue)) {
         queue->items[queue->rear] = process;
         queue->rear = (queue->rear + 1) % MAX_QUEUE_CAPACITY;
@@ -58,38 +58,39 @@ bool enqueue_for_sjf(Queue *queue, Process *process) {
         return true;
     }
 
-    int i = queue->count - 1; // 큐의 실제 마지막 요소부터 시작 (논리적 인덱스)
-    int physical_idx;         // 실제 배열 인덱스
 
-    // 새 프로세스가 들어갈 위치를 찾으면서 요소들을 뒤로 이동
-    // queue->items[queue->front] 부터 queue->items[(queue->rear - 1 + MAX_QUEUE_CAPACITY) % MAX_QUEUE_CAPACITY] 까지가 유효한 요소들
-    // rear는 다음에 들어갈 자리이므로, (rear - 1 + MAX) % MAX 가 마지막 요소의 물리적 위치
+    // 임시 큐 생성하여 정렬된 상태로 요소들을 옮기고
+    Process *temp[MAX_QUEUE_CAPACITY];
+    int tempCount = 0;
 
-    // 임시로 rear 위치부터 시작해서 앞쪽으로 요소를 밀 준비
-    int to_move_idx = queue->rear;
+    // 현재 큐의 모든 프로세스를 임시 배열로 복사하자
+    while (!isEmpty(queue)) {
+        temp[tempCount++] = dequeue(queue);
+    }
 
-    // 큐의 논리적 마지막 요소부터 front 쪽으로 거슬러 올라가며 비교
-    for (int k = 0; k < queue->count; k++) {
-        // 현재 비교할 요소의 물리적 인덱스 계산 (rear부터 거꾸로)
-        physical_idx = (queue->rear - 1 - k + MAX_QUEUE_CAPACITY + MAX_QUEUE_CAPACITY) % MAX_QUEUE_CAPACITY;
-
-        if (queue->items[physical_idx]->remaining_cpu_burst_time > process->remaining_cpu_burst_time) {
-            // 새 프로세스보다 burst가 긴 기존 프로세스는 한 칸 뒤로 이동
-            queue->items[to_move_idx] = queue->items[physical_idx];
-            to_move_idx = physical_idx; // 다음 밀릴 대상의 원래 위치
-        } else {
-            // 새 프로세스가 들어갈 위치를 찾음 (현재 요소 바로 다음 또는 to_move_idx)
-            break; // 이동 중단
+    // 새 프로세스 삽입할 위치 찾기
+    int insertIdx = tempCount;
+    for (int i = 0; i < tempCount; i++) {
+        if (process->remaining_cpu_burst_time < temp[i]->remaining_cpu_burst_time) {
+            insertIdx = i;
+            break;
         }
     }
 
-    // 찾은 위치(to_move_idx)에 새 프로세스 삽입
-    queue->items[to_move_idx] = process;
-
-    queue->rear = (queue->rear + 1) % MAX_QUEUE_CAPACITY;
-    queue->count++;
+    // 임시 배열에서 다시 큐로 정렬된 순서대로 복원
+    for (int i = 0; i < tempCount + 1; i++) {
+        if (i == insertIdx) {
+            enqueue(queue, process); // 새 프로세스 삽입
+        }
+        if (i < tempCount) {
+            enqueue(queue, temp[i]); // 기존 프로세스 삽입
+        }
+    }
 
     return true;
+
+
+
 }
 
 bool enqueue_for_priority(Queue *queue, Process *process) {
