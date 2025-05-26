@@ -1,6 +1,4 @@
-//
-// Created by 김영민 on 25. 5. 4.
-//
+
 
 #include "scheduler.h"
 #include "ganttchart.h"
@@ -1354,12 +1352,12 @@ int calculateTickets(int priority) {
     return (PRIORITY_DIVIDER - priority + 1) * 2; // 계수를 조정하여 티켓 수 조절
 }
 
-Process* selectProcessByLottery(Queue* readyQueue) {
+Process* selectProcessByLottery(Queue* readyQueue) {// 티켓 수에 따른 프로세스 선택 확률 계산해주는 함수 따로 구현
     if (isEmpty(readyQueue)) {
         return NULL;
     }
 
-    // 1. 티켓 수에 따른 프로세스 선택 확률 계산
+
     int totalTickets = 0;
     Process* processes[MAX_QUEUE_CAPACITY];
     int tickets[MAX_QUEUE_CAPACITY];
@@ -1368,10 +1366,10 @@ Process* selectProcessByLottery(Queue* readyQueue) {
     // 큐에서 모든 프로세스와 티켓 정보 수집
     int current_idx = readyQueue->front;
     for (int i = 0; i < readyQueue->count; i++) {
-        Process* proc = readyQueue->items[current_idx];
-        if (proc) {
-            processes[count] = proc;
-            tickets[count] = calculateTickets(proc->priority);
+        Process* process = readyQueue->items[current_idx];
+        if (process) {
+            processes[count] = process;
+            tickets[count] = calculateTickets(process->priority);
             totalTickets += tickets[count];
             count++;
         }
@@ -1382,10 +1380,10 @@ Process* selectProcessByLottery(Queue* readyQueue) {
         return NULL;
     }
 
-    // 2. 당첨 티켓 선택
+    // 당첨 티켓 선택
     int winningTicket = rand() % totalTickets;
 
-    // 3. 당첨 프로세스 찾기
+    // 당첨 프로세스 찾기
     int ticketCounter = 0;
     Process* selectedProcess = NULL;
 
@@ -1401,15 +1399,15 @@ Process* selectProcessByLottery(Queue* readyQueue) {
         return NULL; // 이 부분에 도달하면 안 됨
     }
 
-    // 4. 안전하게 큐에서 선택된 프로세스 제거 (원래 코드 방식)
+    // 안전하게 큐에서 선택된 프로세스 제거
     Queue tempQueue;
     initialize_queue(&tempQueue);
-    Process* actuallySelectedAndRemovedProc = NULL;
+    Process* ActuallySelectedProcess = NULL;
 
     while (!isEmpty(readyQueue)) {
         Process* dequeuedProc = dequeue(readyQueue);
-        if (dequeuedProc == selectedProcess && !actuallySelectedAndRemovedProc) {
-            actuallySelectedAndRemovedProc = dequeuedProc;
+        if (dequeuedProc->pid == selectedProcess->pid && !ActuallySelectedProcess) {
+            ActuallySelectedProcess = dequeuedProc;
         } else {
             enqueue(&tempQueue, dequeuedProc);
         }
@@ -1420,7 +1418,7 @@ Process* selectProcessByLottery(Queue* readyQueue) {
         enqueue(readyQueue, dequeue(&tempQueue));
     }
 
-    return actuallySelectedAndRemovedProc;
+    return ActuallySelectedProcess;
 }
 
 void runLotteryScheduling(Process* processes[], int processCount)
@@ -1435,7 +1433,6 @@ void runLotteryScheduling(Process* processes[], int processCount)
     GanttChartLog ganttLogArray[MAX_GANTTCHART_LOG];
 
     // 간트 차트 초기화 - 시작은 IDLE 상태
-    int previousPID = -1; // IDLE 상태의 PID
     ganttLogArray[ganttEntryCount].startTime = currentTime;
     ganttLogArray[ganttEntryCount].pid = -1;  // IDLE 상태
     ganttLogArray[ganttEntryCount].endTime = 0; // 아직 끝나지 않음
@@ -1477,7 +1474,7 @@ void runLotteryScheduling(Process* processes[], int processCount)
                        currentTime, runningProcess->pid, runningProcess->priority, tickets);
 
                 // 이전 IDLE 로그 종료 및 새 프로세스 로그 시작
-                if (previousPID == -1) {
+                if (ganttLogArray[ganttEntryCount-1].pid == -1) {
                     // 마지막 로그가 IDLE이면 종료
                     ganttLogArray[ganttEntryCount-1].endTime = currentTime;
 
@@ -1486,7 +1483,6 @@ void runLotteryScheduling(Process* processes[], int processCount)
                     ganttLogArray[ganttEntryCount].pid = runningProcess->pid;
                     ganttLogArray[ganttEntryCount].endTime = 0; // 아직 끝나지 않음
                     ganttEntryCount++;
-                    previousPID = runningProcess->pid;
                 }
             }
         }
@@ -1513,7 +1509,6 @@ void runLotteryScheduling(Process* processes[], int processCount)
                 ganttEntryCount++;
 
                 runningProcess = NULL;
-                previousPID = -1; // IDLE 상태로 변경
             }
             // I/O 요청 확인
             else if (runningProcess->current_io_index < runningProcess->io_count &&
@@ -1527,7 +1522,7 @@ void runLotteryScheduling(Process* processes[], int processCount)
                 // 현재 프로세스 로그 종료
                 ganttLogArray[ganttEntryCount-1].endTime = currentTime + 1;
 
-                // I/O 상태 시작 - 다음 상태는 IDLE
+                // I/O 상태 시작 - 다음 상태는 IDLE로 해놓자
                 ganttLogArray[ganttEntryCount].startTime = currentTime + 1;
                 ganttLogArray[ganttEntryCount].pid = -1; // IDLE
                 ganttLogArray[ganttEntryCount].endTime = 0; // 아직 끝나지 않음
@@ -1538,9 +1533,8 @@ void runLotteryScheduling(Process* processes[], int processCount)
                 }
 
                 runningProcess = NULL;
-                previousPID = -1; // IDLE 상태로 변경
             }
-            // 로터리 알고리즘은 비선점형으로 구현 (프로세스는 종료, I/O 요청 또는 burst 완료까지 계속 실행)
+            // 일단 로터리 알고리즘은 비선점형으로...
         }
 
         currentTime++;
@@ -1569,21 +1563,20 @@ void runLotteryScheduling(Process* processes[], int processCount)
     drawGanttChart(ganttLogArray, validLogs);
 }
 
-void runLISCCombined(Process* processes[], int processCount, bool isPreemptive) {
-    int currentTime = 0;        // 현재 시뮬레이션 시간
-    int terminatedCount = 0;    // 종료된 프로세스 수
-    int ganttEntryCount = 0;    // 간트 차트 로그 항목 수
+void runLISCCombined(Process* processes[], int processCount, bool isPreemptive) {//LongestIOShortestCPU
+    int currentTime = 0;
+    int terminatedCount = 0;
+    int ganttEntryCount = 0;
 
-    Queue readyQueue;           // 준비 큐
-    Queue waitQueue;            // 대기 큐 (I/O 작업용)
-    Process *runningProcess = NULL; // 현재 CPU에서 실행 중인 프로세스
-    GanttChartLog ganttLogArray[MAX_GANTTCHART_LOG]; // 간트 차트 기록 배열
+    Queue readyQueue;
+    Queue waitQueue;
+    Process *runningProcess = NULL;
+    GanttChartLog ganttLogArray[MAX_GANTTCHART_LOG];
 
-    int previousPID = -1; // 이전에 실행된 프로세스 ID (-1은 IDLE)
     // 간트 차트 초기화: 시간 0에서 IDLE 상태로 시작
     ganttLogArray[ganttEntryCount].startTime = currentTime;
-    ganttLogArray[ganttEntryCount].pid = -1; // IDLE 상태 표시
-    ganttLogArray[ganttEntryCount].endTime = 0; // 아직 종료되지 않음
+    ganttLogArray[ganttEntryCount].pid = -1;
+    ganttLogArray[ganttEntryCount].endTime = 0;
     ganttEntryCount++;
 
     initialize_queue(&readyQueue); // 준비 큐 초기화
@@ -1597,9 +1590,9 @@ void runLISCCombined(Process* processes[], int processCount, bool isPreemptive) 
 
     // 모든 프로세스가 종료될 때까지 시뮬레이션 루프 실행
     while (terminatedCount < processCount) {
-        bool newEventOccurred = false; // 새로운 이벤트(도착/I_O완료) 발생 여부 플래그
+        bool newEventOccurred = false; // 새로운 이벤트 있냐..
 
-        // 1. 프로세스 도착 처리: 현재 시간에 도착한 프로세스를 준비 큐에 추가
+        // 프로세스 도착 처리: 현재 시간에 도착한 프로세스를 준비 큐에 추가
         for (int i = 0; i < processCount; i++) {
             if (processes[i] && processes[i]->status == NEW && processes[i]->arrival_time <= currentTime) {
                 processes[i]->status = READY;
@@ -1613,32 +1606,32 @@ void runLISCCombined(Process* processes[], int processCount, bool isPreemptive) 
             }
         }
 
-        // 2. I/O 작업 처리: 대기 큐의 프로세스들 I/O 진행 및 완료 시 준비 큐로 이동
+        // I/O 작업 처리: 대기 큐의 프로세스들 I/O 진행 및 완료 시 준비 큐로 이동
         int initialWaitQueueCount = waitQueue.count;
         IO_Operation_LISC(&readyQueue, &waitQueue, &terminatedCount, &currentTime); // IO_Operation_LISC는 내부적으로 enqueue_for_lisc 사용
          if (waitQueue.count < initialWaitQueueCount || (initialWaitQueueCount > 0 && readyQueue.count > (readyQueue.count - (initialWaitQueueCount - waitQueue.count)))) {
              newEventOccurred = true; // I/O 완료로 인한 이벤트 발생
         }
 
-        // 3. 선점 로직 (선점형 LISC이고 새로운 이벤트가 발생했을 경우)
+        //  선점 로직 (선점형 LISC이고 새로운 이벤트가 발생했을 경우)
         if (isPreemptive && newEventOccurred && runningProcess != NULL) {
             if (!isEmpty(&readyQueue)) {
                 Process *candidateProcess = readyQueue.items[readyQueue.front]; // 준비 큐에서 최우선순위 LISC 프로세스 확인 (Peek)
 
                 if (candidateProcess) {
-                    bool shouldPreempt = false;
+                    bool PreemptOrNot = false;
                     // LISC 우선순위 비교:
-                    // 1. 총 I/O 시간이 더 긴 경우
+                    // 총 I/O 시간이 더 긴 경우
                     if (candidateProcess->io_burst_time > runningProcess->io_burst_time) {
-                        shouldPreempt = true;
+                        PreemptOrNot = true;
                     }
-                    // 2. 총 I/O 시간이 같고, 남은 CPU 시간이 더 짧은 경우
+                    // 총 I/O 시간이 같고, 남은 CPU 시간이 더 짧은 경우
                     else if (candidateProcess->io_burst_time == runningProcess->io_burst_time &&
                                candidateProcess->remaining_cpu_burst_time < runningProcess->remaining_cpu_burst_time) {
-                        shouldPreempt = true;
+                        PreemptOrNot = true;
                     }
 
-                    if (shouldPreempt) {
+                    if (PreemptOrNot) {
                         printf("Time %d: Process %d (IO: %d, CPU: %d) PREEMPTED by Process %d (IO: %d, CPU: %d)\n",
                                currentTime,
                                runningProcess->pid, runningProcess->io_burst_time, runningProcess->remaining_cpu_burst_time,
@@ -1659,7 +1652,7 @@ void runLISCCombined(Process* processes[], int processCount, bool isPreemptive) 
             }
         }
 
-        // 4. CPU 할당 로직: CPU가 비어있고 준비 큐에 프로세스가 있는 경우
+        // CPU 할당 로직: CPU가 비어있고 준비 큐에 프로세스가 있는 경우
         if (runningProcess == NULL && !isEmpty(&readyQueue)) {
             runningProcess = dequeue(&readyQueue); // 준비 큐는 LISC 순서로 정렬되어 있음
 
@@ -1678,25 +1671,23 @@ void runLISCCombined(Process* processes[], int processCount, bool isPreemptive) 
                 ganttLogArray[ganttEntryCount].pid = runningProcess->pid;
                 ganttLogArray[ganttEntryCount].endTime = 0; // 아직 종료되지 않음
                 ganttEntryCount++;
-                previousPID = runningProcess->pid; // 이전 실행 프로세스 ID 업데이트
             }
         }
 
-        // 5. CPU 실행 및 상태 전이
+        // CPU 실행..
         if (runningProcess != NULL) {
-            runningProcess->remaining_cpu_burst_time--; // 남은 CPU 시간 감소
-            runningProcess->cpu_time_used++;            // 사용한 CPU 시간 증가
+            runningProcess->remaining_cpu_burst_time--;
+            runningProcess->cpu_time_used++;
 
             // 프로세스 종료 검사
             if (runningProcess->remaining_cpu_burst_time <= 0) {
-                runningProcess->status = TERMINATED; // 상태를 TERMINATED로 변경
-                runningProcess->completion_time = currentTime + 1; // 종료 시간 기록
-                terminatedCount++; // 종료된 프로세스 수 증가
+                runningProcess->status = TERMINATED;
+                runningProcess->completion_time = currentTime + 1;
+                terminatedCount++;
                 printf("시간 %d: 프로세스 %d 종료됨\n", currentTime + 1, runningProcess->pid);
 
                 ganttLogArray[ganttEntryCount-1].endTime = currentTime + 1;
                 runningProcess = NULL;
-                previousPID = -1;
 
                 if (terminatedCount < processCount) {
                     ganttLogArray[ganttEntryCount].startTime = currentTime + 1;
@@ -1721,7 +1712,6 @@ void runLISCCombined(Process* processes[], int processCount, bool isPreemptive) 
                     fprintf(stderr, "[Error] LISC: Wait queue full for P%d at time %d!\n", runningProcess->pid, currentTime);
                 }
                 runningProcess = NULL;
-                previousPID = -1;
 
                 if (terminatedCount < processCount) {
                     ganttLogArray[ganttEntryCount].startTime = currentTime + 1;
@@ -1730,22 +1720,6 @@ void runLISCCombined(Process* processes[], int processCount, bool isPreemptive) 
                     ganttEntryCount++;
                 }
             }
-        } else { // CPU가 IDLE 상태
-            if (ganttEntryCount == 0 || (ganttLogArray[ganttEntryCount-1].pid != -1 && ganttLogArray[ganttEntryCount-1].endTime != 0) ||
-                (ganttLogArray[ganttEntryCount-1].pid == -1 && ganttLogArray[ganttEntryCount-1].startTime != currentTime && ganttLogArray[ganttEntryCount-1].endTime == 0) ) {
-                 if (ganttEntryCount > 0 && ganttLogArray[ganttEntryCount-1].pid != -1 && ganttLogArray[ganttEntryCount-1].endTime != 0) {
-                     ganttLogArray[ganttEntryCount].startTime = currentTime;
-                     ganttLogArray[ganttEntryCount].pid = -1;
-                     ganttLogArray[ganttEntryCount].endTime = 0;
-                     ganttEntryCount++;
-                 } else if (ganttEntryCount > 0 && ganttLogArray[ganttEntryCount-1].pid == -1 && ganttLogArray[ganttEntryCount-1].endTime != 0) {
-                     ganttLogArray[ganttEntryCount].startTime = currentTime;
-                     ganttLogArray[ganttEntryCount].pid = -1;
-                     ganttLogArray[ganttEntryCount].endTime = 0;
-                     ganttEntryCount++;
-                 }
-            }
-            previousPID = -1;
         }
         currentTime++; // 시간 증가
     }
@@ -1755,16 +1729,15 @@ void runLISCCombined(Process* processes[], int processCount, bool isPreemptive) 
         ganttLogArray[ganttEntryCount-1].endTime = currentTime;
     }
 
-    // 유효한 간트 차트 로그만 필터링
+    // 유효한 간트 차트 로그만 남겨두자
     int validLogs = 0;
-    GanttChartLog finalGanttLogs[MAX_GANTTCHART_LOG];
     for (int i = 0; i < ganttEntryCount; i++) {
         if (ganttLogArray[i].startTime < ganttLogArray[i].endTime) {
-            finalGanttLogs[validLogs++] = ganttLogArray[i];
-        } else if (ganttLogArray[i].pid == -1 && ganttLogArray[i].startTime == ganttLogArray[i].endTime && ganttLogArray[i].startTime == currentTime && terminatedCount == processCount){
-            // 끝에서 0길이 IDLE 로그는 제외
-        } else if (ganttLogArray[i].pid != -1 && ganttLogArray[i].startTime == ganttLogArray[i].endTime) {
-             finalGanttLogs[validLogs++] = ganttLogArray[i];
+            // 유효한 로그만 유지
+            if (i != validLogs) {
+                ganttLogArray[validLogs] = ganttLogArray[i];
+            }
+            validLogs++;
         }
     }
 
@@ -1775,7 +1748,7 @@ void runLISCCombined(Process* processes[], int processCount, bool isPreemptive) 
         printf("Combined Non-Preemptive LISC Scheduling Simulation COMPLETED at time %d-----------\n", currentTime);
     }
     printf("Valid gantt chart logs: %d\n", validLogs);
-    drawGanttChart(finalGanttLogs, validLogs); // 간트 차트 출력
+    drawGanttChart(ganttLogArray, validLogs); // 간트 차트 출력
 }
 
 void runHRRN(Process* processes[], int processCount)
@@ -1787,13 +1760,12 @@ void runHRRN(Process* processes[], int processCount)
     Queue readyQueue;
     Queue waitQueue;
     Process *runningProcess = NULL;
-    GanttChartLog ganttLogArray[MAX_GANTTCHART_LOG]; // ganttchart.h 필요
+    GanttChartLog ganttLogArray[MAX_GANTTCHART_LOG];
 
     initialize_queue(&readyQueue);
     initialize_queue(&waitQueue);
 
     // 간트 차트 초기화
-    int previousPID = -1;
     ganttLogArray[ganttEntryCount].startTime = currentTime;
     ganttLogArray[ganttEntryCount].pid = -1;
     ganttLogArray[ganttEntryCount].endTime = 0;
@@ -1802,12 +1774,14 @@ void runHRRN(Process* processes[], int processCount)
     printf("HRRN Scheduling Simulation STARTED-----------\n");
 
     while (terminatedCount < processCount) {
-        // 1. 프로세스 도착 처리
+        // 프로세스 도착 처리
         for (int i = 0; i < processCount; i++) {
             if (processes[i] && processes[i]->status == NEW && processes[i]->arrival_time <= currentTime) {
                 processes[i]->status = READY;
-                processes[i]->time_entered_ready = currentTime; // Ready Queue 진입 시간 기록!
-                if (!enqueue(&readyQueue, processes[i])) {
+                processes[i]->time_entered_ready = currentTime;
+
+                //응답률 순으로 정렬해주는 enqueue
+                if (!enqueue_for_hrrn(&readyQueue, processes[i], currentTime)) {
                     fprintf(stderr, "[Error] HRRN: Ready queue full on arrival for P%d!\n", processes[i]->pid);
                 }
                 printf("Time %d: Process %d ARRIVED (Entered Ready at %d)\n",
@@ -1815,67 +1789,36 @@ void runHRRN(Process* processes[], int processCount)
             }
         }
 
-        // 2. I/O 처리
+        // I/O 처리
         IO_Operation_HRRN(&readyQueue, &waitQueue, currentTime, &terminatedCount);
 
-        // 3. CPU 할당 (Highest Response Ratio 찾기)
+        // CPU 할당 큐의 맨 앞이 항상 최고 응답률
         if (runningProcess == NULL && !isEmpty(&readyQueue)) {
-            Process *selectedProcess = NULL;
-            double highestRatio = -1.0; // 또는 DBL_MIN 사용
-            int readyCount = readyQueue.count;
-            Process *tempStorage[MAX_QUEUE_CAPACITY]; // 임시 저장소
+            runningProcess = dequeue(&readyQueue); // 큐에서 첫 번째 프로세스 선택
 
-            // 준비 큐에서 모든 프로세스를 꺼내 확인하고 임시 저장
-            for (int i = 0; i < readyCount; i++) {
-                tempStorage[i] = dequeue(&readyQueue);
-                if (tempStorage[i] == NULL) continue;
-
-                int waitingTime = currentTime - tempStorage[i]->time_entered_ready;
-                if (waitingTime < 0) waitingTime = 0;
-
-                // 실행 시간(Burst Time)이 0인 경우 처리 (일반적으로 양수여야 함)
-                int burstTime = tempStorage[i]->cpu_burst_time; // 전체 버스트 시간 기준
-
-                    double ratio = (double)(waitingTime + burstTime) / burstTime;
-                    printf("  - Checking P%d: Wait=%d, Burst=%d, Ratio=%.2f\n", tempStorage[i]->pid, waitingTime, burstTime, ratio);
-
-                    if (selectedProcess == NULL || ratio > highestRatio) {
-                        highestRatio = ratio;
-                        selectedProcess = tempStorage[i];
-                    }
-                    // 타이 브레이킹: 응답률 같으면 먼저 들어온 프로세스 선택 (FIFO)
-                    // (현재 로직은 먼저 찾은 프로세스를 유지하므로 FIFO와 유사)
-                }
-
-
-            // 선택되지 않은 프로세스들을 다시 준비 큐에 넣음
-            for (int i = 0; i < readyCount; i++) {
-                if (tempStorage[i] != selectedProcess) {
-                    enqueue(&readyQueue, tempStorage[i]);
-                }
-            }
-
-            // 선택된 프로세스를 실행 상태로 설정
-            runningProcess = selectedProcess;
             if (runningProcess) {
                 runningProcess->status = RUNNING;
-                runningProcess->time_entered_ready = -1; // 더 이상 준비 큐에서 대기하지 않음
-                printf("Time %d: Process %d selected (HRRN Ratio=%.2f). Running.\n",
-                       currentTime, runningProcess->pid, highestRatio);
+                runningProcess->time_entered_ready = -1;
 
-                // 간트 차트 로깅: 새 프로세스 시작
+                // 응답률 계산
+                int waitingTime = currentTime - runningProcess->time_entered_ready;
+                double ratio = (double)(waitingTime + runningProcess->cpu_burst_time) / runningProcess->cpu_burst_time;
+
+                printf("Time %d: Process %d selected (HRRN Ratio=%.2f). Running.\n",
+                       currentTime, runningProcess->pid, ratio);
+
+                // 간트 차트 로깅
                 if (ganttEntryCount > 0 && ganttLogArray[ganttEntryCount-1].endTime == 0) {
-                    ganttLogArray[ganttEntryCount-1].endTime = currentTime; // 이전 로그 종료
+                    ganttLogArray[ganttEntryCount-1].endTime = currentTime;
                 }
                 ganttLogArray[ganttEntryCount].startTime = currentTime;
                 ganttLogArray[ganttEntryCount].pid = runningProcess->pid;
-                ganttLogArray[ganttEntryCount].endTime = 0; // 아직 끝나지 않음
+                ganttLogArray[ganttEntryCount].endTime = 0;
                 ganttEntryCount++;
-                previousPID = runningProcess->pid;
             }
         }
 
-        // 4. CPU 실행
+        // CPU 실행 부분은 기존과 동일
         if (runningProcess != NULL) {
             runningProcess->remaining_cpu_burst_time--;
             runningProcess->cpu_time_used++;
@@ -1886,10 +1829,9 @@ void runHRRN(Process* processes[], int processCount)
                 runningProcess->completion_time = currentTime + 1;
                 terminatedCount++;
                 printf("Time %d: Process %d TERMINATED\n", currentTime + 1, runningProcess->pid);
-                ganttLogArray[ganttEntryCount-1].endTime = currentTime + 1; // 현재 로그 종료
+                ganttLogArray[ganttEntryCount-1].endTime = currentTime + 1;
                 runningProcess = NULL;
-                previousPID = -1;
-                // 다음 시간부터 IDLE 로그 시작
+
                 ganttLogArray[ganttEntryCount].startTime = currentTime + 1;
                 ganttLogArray[ganttEntryCount].pid = -1;
                 ganttLogArray[ganttEntryCount].endTime = 0;
@@ -1902,31 +1844,17 @@ void runHRRN(Process* processes[], int processCount)
                 runningProcess->remaining_io_burst_time = runningProcess->io_burst_times[runningProcess->current_io_index];
                 printf("Time %d: Process %d requests I/O (Duration %d)\n",
                        currentTime + 1, runningProcess->pid, runningProcess->remaining_io_burst_time);
-                ganttLogArray[ganttEntryCount-1].endTime = currentTime + 1; // 현재 로그 종료
+                ganttLogArray[ganttEntryCount-1].endTime = currentTime + 1;
 
-                if (!enqueue(&waitQueue, runningProcess)) { // Wait 큐로 이동
+                if (!enqueue(&waitQueue, runningProcess)) {
                     fprintf(stderr, "[Error] HRRN: Wait queue full for P%d!\n", runningProcess->pid);
                 }
                 runningProcess = NULL;
-                previousPID = -1;
                 ganttLogArray[ganttEntryCount].startTime = currentTime + 1;
                 ganttLogArray[ganttEntryCount].pid = -1;
                 ganttLogArray[ganttEntryCount].endTime = 0;
                 ganttEntryCount++;
             }
-            // HRRN은 비선점형이므로, 다른 검사(선점 등)는 필요 없음
-        } else { // CPU IDLE
-             if (previousPID != -1 || (ganttEntryCount > 0 && ganttLogArray[ganttEntryCount-1].pid != -1)) {
-                 if (ganttEntryCount > 0 && ganttLogArray[ganttEntryCount-1].endTime == 0) {
-                      ganttLogArray[ganttEntryCount-1].endTime = currentTime;
-                 }
-                 ganttLogArray[ganttEntryCount].startTime = currentTime;
-                 ganttLogArray[ganttEntryCount].pid = -1;
-                 ganttLogArray[ganttEntryCount].endTime = 0;
-                 ganttEntryCount++;
-             }
-             previousPID = -1;
-             printf("Time %d: CPU IDLE\n", currentTime);
         }
 
         currentTime++;
@@ -1936,19 +1864,542 @@ void runHRRN(Process* processes[], int processCount)
     if (ganttEntryCount > 0 && ganttLogArray[ganttEntryCount-1].endTime == 0) {
         ganttLogArray[ganttEntryCount-1].endTime = currentTime;
     }
-    // 유효 로그 필터링 (기존과 유사)
+
     int validLogs = 0;
-    GanttChartLog finalLogs[MAX_GANTTCHART_LOG];
     for (int i = 0; i < ganttEntryCount; i++) {
         if (ganttLogArray[i].startTime < ganttLogArray[i].endTime) {
-            finalLogs[validLogs++] = ganttLogArray[i];
+            // 유효한 로그만 유지
+            if (i != validLogs) {
+                ganttLogArray[validLogs] = ganttLogArray[i];
+            }
+            validLogs++;
         }
     }
 
     printf("HRRN Scheduling Simulation COMPLETED at time %d-----------\n", currentTime);
-    drawGanttChart(finalLogs, validLogs); // ganttchart.c 함수 호출
+    drawGanttChart(ganttLogArray, validLogs);
 }
 
+void runMultiLevelFeedBackQueue(Process* processes[], int processCount)
+{
+    int currentTime = 0;
+    int terminatedCount = 0;
+    int ganttEntryCount = 0;
+    int timeQuantum; // 라운드 로빈의 time quantum 값 (foreground 큐에서 사용)
+    int quantumCounter = 0; // 현재 프로세스의 quantum 사용량 카운터
+    int currentQueue = -1; // 현재 서비스 중인 큐 (0: foreground, 1: background)
+
+    // 두 개의 큐(foreground, background)를 위한 레디 큐와 대기 큐
+    Queue foregroundReadyQueue;
+    Queue backgroundReadyQueue;
+    Queue foregroundWaitQueue;
+    Queue backgroundWaitQueue;
+
+    Process *runningProcess = NULL;
+    GanttChartLog ganttLogArray[MAX_GANTTCHART_LOG];
+
+    // Time Quantum 입력 받기 (foreground 큐용)
+    printf("Enter time quantum for foreground queue: ");
+    scanf("%d", &timeQuantum);
+    if (timeQuantum <= 0) {
+        printf("Invalid time quantum. Setting to default value 2.\n");
+        timeQuantum = 2;
+    }
+
+    // 간트 차트 초기화 - 시작은 IDLE 상태
+
+    ganttLogArray[ganttEntryCount].startTime = currentTime;
+    ganttLogArray[ganttEntryCount].pid = -1;  // IDLE 상태
+    ganttLogArray[ganttEntryCount].endTime = 0; // 아직 끝나지 않음
+    ganttEntryCount++;
+
+    initialize_queue(&foregroundReadyQueue);
+    initialize_queue(&backgroundReadyQueue);
+    initialize_queue(&foregroundWaitQueue);
+    initialize_queue(&backgroundWaitQueue);
+
+    printf("Multi-Level FeedBack Queue Scheduling Simulation STARTED-----------\n");
+    printf("Foreground queue (priority <= %d): Round Robin (quantum=%d)\n", PRIORITY_DIVIDER/2, timeQuantum);
+    printf("Background queue (priority > %d): FCFS\n", PRIORITY_DIVIDER/2);
+    printf("Time allocation: 70%% foreground, 30%% background\n");
+
+    // 모든 프로세스가 종료될 때까지 루프 실행
+    while (terminatedCount < processCount) {
+        // 현재 시간에 도착한 프로세스를 우선순위에 따라 적절한 Ready Queue에 추가
+        for (int i = 0; i < processCount; i++) {
+            if (processes[i] && processes[i]->status == NEW && processes[i]->arrival_time <= currentTime) {
+                processes[i]->status = READY;
+
+                // 우선순위에 따라 프로세스를 적절한 큐에 배치
+                if (processes[i]->priority <= PRIORITY_DIVIDER/2) { // 우선순위가 높은 프로세스 (값이 작을수록 우선순위 높음)
+                    if (!enqueue(&foregroundReadyQueue, processes[i])) {
+                        fprintf(stderr, "[Error] Foreground queue full at time %d!\n", currentTime);
+                    }
+                    printf("Time %d: Process %d ARRIVED (Priority: %d) -> Foreground Queue\n",
+                           currentTime, processes[i]->pid, processes[i]->priority);
+                } else { // 우선순위가 낮은 프로세스
+                    processes[i]->time_entered_ready = currentTime;
+                    if (!enqueue(&backgroundReadyQueue, processes[i])) {
+                        fprintf(stderr, "[Error] Background queue full at time %d!\n", currentTime);
+                    }
+                    printf("Time %d: Process %d ARRIVED (Priority: %d) -> Background Queue\n",
+                           currentTime, processes[i]->pid, processes[i]->priority);
+                }
+            }
+        }
+
+        // I/O 작업 처리
+        // Foreground queue I/O 작업 처리
+        IO_Operation(&foregroundReadyQueue,&foregroundWaitQueue,&terminatedCount,&currentTime);
+
+
+        // Background queue I/O 작업 처리
+        IO_Operation_Background(&backgroundReadyQueue,&backgroundWaitQueue,&terminatedCount,currentTime);
+
+
+        // 큐 선택: 70%는 foreground, 30%는 background 큐에 할당
+        int whichQueue;
+        if (currentTime % 10 < 7) { // 70% 확률로 foreground 큐 선택 cpu 할당 비율 높게!
+            whichQueue = 0; // foreground
+        } else { // 20% 확률로 background 큐 선택
+            whichQueue = 1; // background
+        }
+
+        // 현재 서비스 중인 큐가 다르고, 선택된 큐에 프로세스가 있으면 선점
+        // 이게 밑에서 할당된 큐에 프로세스가 없으면 다른 큐에 있는 프로세스 실행하도록 했는데 자기 할당 시간에 프로세스 생기면 그거 실행하는게 맞지
+        if (runningProcess != NULL && currentQueue != whichQueue) {
+            if ((whichQueue == 0 && !isEmpty(&foregroundReadyQueue)) ||
+                (whichQueue == 1 && !isEmpty(&backgroundReadyQueue))) {
+
+
+                // 현재 프로세스를 원래 큐로 돌려보냄
+                runningProcess->status = READY;
+                if (currentQueue == 0) {
+                    if (!enqueue(&foregroundReadyQueue, runningProcess)) {
+                        fprintf(stderr, "[Error] Foreground queue full during queue switch!\n");
+                    }
+                } else {
+                    if (!enqueue(&backgroundReadyQueue, runningProcess)) {
+                        fprintf(stderr, "[Error] Background queue full during queue switch!\n");
+                    }
+                }
+
+                // 간트 차트 업데이트
+                ganttLogArray[ganttEntryCount-1].endTime = currentTime;
+
+                // 새 상태는 IDLE로 시작 (다음 루프에서 프로세스가 할당되면 변경됨)
+                ganttLogArray[ganttEntryCount].startTime = currentTime;
+                ganttLogArray[ganttEntryCount].pid = -1; // IDLE
+                ganttLogArray[ganttEntryCount].endTime = 0; // 아직 끝나지 않음
+                ganttEntryCount++;
+
+                runningProcess = NULL;
+                quantumCounter = 0;
+            }
+        }
+
+        // CPU 할당 (이전 프로세스가 종료되었거나 선점되었을 때)
+        if (runningProcess == NULL) {
+            // 선택된 큐에서 프로세스를 가져옴
+            if (whichQueue == 0 && !isEmpty(&foregroundReadyQueue)) {
+                runningProcess = dequeue(&foregroundReadyQueue);
+                currentQueue = 0; // fore
+                quantumCounter = 0; // foreground 큐는 Round Robin 사용
+                printf("Time %d: Process %d RUNNING from Foreground Queue\n",
+                       currentTime, runningProcess->pid);
+            } else if (whichQueue == 1 && !isEmpty(&backgroundReadyQueue)) {
+                runningProcess = dequeue(&backgroundReadyQueue);
+                currentQueue = 1; //back
+                printf("Time %d: Process %d RUNNING from Background Queue\n",
+                       currentTime, runningProcess->pid);
+            }
+            // 선택된 큐가 비어있으면 다른 큐를 확인
+            else if (whichQueue == 0 && !isEmpty(&backgroundReadyQueue)) {
+                runningProcess = dequeue(&backgroundReadyQueue);
+                currentQueue = 1; //back
+                printf("Time %d: Process %d RUNNING from Background Queue (Foreground empty)\n",
+                       currentTime, runningProcess->pid);
+            } else if (whichQueue == 1 && !isEmpty(&foregroundReadyQueue)) {
+                runningProcess = dequeue(&foregroundReadyQueue);
+                currentQueue = 0; //fore
+                quantumCounter = 0; // foreground 큐는 Round Robin 사용
+                printf("Time %d: Process %d RUNNING from Foreground Queue (Background empty)\n",
+                       currentTime, runningProcess->pid);
+            }
+
+            // 프로세스 할당 성공 시 간트 차트 업데이트
+            if (runningProcess) {
+                runningProcess->status = RUNNING;
+
+                // 이전 IDLE 로그 종료 및 새 프로세스 로그 시작
+                if (ganttLogArray[ganttEntryCount-1].pid == -1) {
+                    // 마지막 로그가 IDLE이면 종료
+                    ganttLogArray[ganttEntryCount-1].endTime = currentTime;
+
+                    // 새 프로세스 로그 시작
+                    ganttLogArray[ganttEntryCount].startTime = currentTime;
+                    ganttLogArray[ganttEntryCount].pid = runningProcess->pid;
+                    ganttLogArray[ganttEntryCount].endTime = 0; // 아직 끝나지 않음
+                    ganttEntryCount++;
+                }
+            }
+        }
+
+        // CPU 실행
+        if (runningProcess != NULL) {
+            runningProcess->remaining_cpu_burst_time--;
+            runningProcess->cpu_time_used++;
+
+            if (currentQueue == 0) { // foreground 큐는 time quantum을 사용
+                quantumCounter++;
+            }
+
+            // 프로세스 종료 검사
+            if (runningProcess->remaining_cpu_burst_time <= 0) {
+                runningProcess->status = TERMINATED;
+                runningProcess->completion_time = currentTime + 1;
+                terminatedCount++;
+                printf("Time %d: Process %d TERMINATED\n", currentTime + 1, runningProcess->pid);
+
+                // 현재 프로세스 로그 종료
+                ganttLogArray[ganttEntryCount-1].endTime = currentTime + 1;
+
+                // 다음 상태는 IDLE로 일단 해놓기
+                ganttLogArray[ganttEntryCount].startTime = currentTime + 1;
+                ganttLogArray[ganttEntryCount].pid = -1; // IDLE
+                ganttLogArray[ganttEntryCount].endTime = 0; // 아직 끝나지 않음
+                ganttEntryCount++;
+
+                runningProcess = NULL;
+                quantumCounter = 0;
+            }
+            // I/O 요청 확인
+            else if (runningProcess->current_io_index < runningProcess->io_count &&
+                     runningProcess->cpu_time_used == runningProcess->io_trigger[runningProcess->current_io_index]) {
+                runningProcess->remaining_io_burst_time = runningProcess->io_burst_times[runningProcess->current_io_index];
+                runningProcess->status = WAITING;
+
+                printf("Time %d: Process %d requests I/O (Duration %d)\n",
+                       currentTime + 1, runningProcess->pid, runningProcess->remaining_io_burst_time);
+
+                // 현재 프로세스 로그 종료
+                ganttLogArray[ganttEntryCount-1].endTime = currentTime + 1;
+
+                // I/O 상태 시작 - 다음 상태는 IDLE
+                ganttLogArray[ganttEntryCount].startTime = currentTime + 1;
+                ganttLogArray[ganttEntryCount].pid = -1; // IDLE
+                ganttLogArray[ganttEntryCount].endTime = 0; // 아직 끝나지 않음
+                ganttEntryCount++;
+
+                // 적절한 I/O 큐에 프로세스 추가
+                if (currentQueue == 0) {
+                    if (!enqueue(&foregroundWaitQueue, runningProcess)) {
+                        fprintf(stderr, "[Error] Foreground wait queue full at time %d!\n", currentTime);
+                    }
+                } else {
+                    if (!enqueue(&backgroundWaitQueue, runningProcess)) {
+                        fprintf(stderr, "[Error] Background wait queue full at time %d!\n", currentTime);
+                    }
+                }
+
+                runningProcess = NULL;
+                quantumCounter = 0;
+            }
+            // foreground 큐의 time quantum 만료 확인 (background 큐는 FCFS이므로 확인 안함)
+            else if (currentQueue == 0 && quantumCounter >= timeQuantum) {
+                printf("Time %d: Process %d QUANTUM EXPIRED (Returned to Foreground Queue)\n",
+                       currentTime, runningProcess->pid);
+
+                // 현재 프로세스 로그 종료
+                ganttLogArray[ganttEntryCount-1].endTime = currentTime;
+
+                // 프로세스가 타임퀀텀내에 안끝났으므로 background queue 로 강등시켜준다.
+                runningProcess->status = READY;
+                runningProcess->priority = PRIORITY_DIVIDER/2 + 1;
+                if (!enqueue(&backgroundReadyQueue, runningProcess)) {
+                    fprintf(stderr, "[Error] Foreground queue full during quantum expiration!\n");
+                }
+
+                // 다음 상태는 IDLE로 시작 (다음 루프에서 프로세스가 할당되면 변경됨)
+                ganttLogArray[ganttEntryCount].startTime = currentTime;
+                ganttLogArray[ganttEntryCount].pid = -1; // IDLE
+                ganttLogArray[ganttEntryCount].endTime = 0; // 아직 끝나지 않음
+                ganttEntryCount++;
+
+                runningProcess = NULL;
+                quantumCounter = 0;
+            }
+        }
+
+
+        //5초에 한번씩 큐 변동 조건 확인하자..aging으로 해서..
+        if (currentTime % 5 ==0) {
+            Queue temp_for_upgrade;
+            initialize_queue(&temp_for_upgrade);
+            for (int i = 0; i < backgroundReadyQueue.count; i++) {
+                Process* process = dequeue(&backgroundReadyQueue); // background에서 하나씩 꺼냄
+
+
+                // 15 타임 유닛 이상 backgroundReadyQueue에서 대기했는지 확인
+                if ((currentTime - process->time_entered_ready) > 15) {
+                    printf("Time %d: Process %d (Original Prio: %d) AGING from BackgroundQ (waited > 15 units).\n",
+                           currentTime, process->pid, process->priority);
+
+                    // Foreground 큐로 옮기기 위해 우선순위 조정
+                    process->priority = PRIORITY_DIVIDER / 2;
+
+                    if (!enqueue(&foregroundReadyQueue, process)) { // Foreground 큐로 이동
+                        fprintf(stderr, "[Error] Aging: ForegroundReadyQueue full for P%d at time %d. Returning to Background.\n",
+                                process->pid, currentTime);
+                        // Foreground 큐가 가득 찼다면, 다시 background 큐로 넣음
+                        enqueue(&temp_for_upgrade, process);
+                    } else {
+                        printf("Time %d: Process %d MOVED to ForegroundQueue (New Prio: %d).\n",
+                               currentTime, process->pid, process->priority);
+                        // Foreground 큐로 성공적으로 이동했다면, Foreground 큐에서의 대기 시간 등을 위한
+                    }
+                } else {
+                    // 아직 에이징 대상이 아니면 임시 큐에 다시 보관
+                    enqueue(&temp_for_upgrade, process);
+                }
+            }
+
+            //  임시 큐에 있던 프로세스들을 다시 backgroundReadyQueue로 복원
+            while (!isEmpty(&temp_for_upgrade)) {
+                enqueue(&backgroundReadyQueue, dequeue(&temp_for_upgrade));
+            }
+        }
+
+
+        currentTime++;
+    }
+
+    // 마지막 로그 항목 종료 시간 설정
+    if (ganttEntryCount > 0 && ganttLogArray[ganttEntryCount-1].endTime == 0) {
+        ganttLogArray[ganttEntryCount-1].endTime = currentTime;
+
+    }
+
+    // 유효하지 않은 로그 항목 제거 (시작 시간과 종료 시간이 같은 항목)
+    int validLogs = 0;
+    for (int i = 0; i < ganttEntryCount; i++) {
+        if (ganttLogArray[i].startTime < ganttLogArray[i].endTime) {
+            // 유효한 로그만 유지
+            if (i != validLogs) {
+                ganttLogArray[validLogs] = ganttLogArray[i];
+            }
+            validLogs++;
+        }
+    }
+
+    printf("Multi-Level Queue Scheduling Simulation COMPLETED at time %d-----------\n", currentTime);
+    printf("Valid gantt chart logs: %d\n", validLogs);
+
+    drawGanttChart(ganttLogArray, validLogs);
+}
+void runPriorityAgingCombined(Process* processes[], int processCount, bool isPreemptive) {
+
+    int currentTime = 0;
+    int terminatedCount = 0;
+    int ganttEntryCount = 0;
+
+    Queue readyQueue;
+    Queue waitQueue;
+    Process *runningProcess = NULL;
+    GanttChartLog ganttLogArray[MAX_GANTTCHART_LOG];
+
+    ganttLogArray[ganttEntryCount].startTime = currentTime;
+    ganttLogArray[ganttEntryCount].pid = -1;  // IDLE 상태
+    ganttLogArray[ganttEntryCount].endTime = 0; // 아직 끝나지 않음
+    ganttEntryCount++;
+
+    initialize_queue(&readyQueue);
+    initialize_queue(&waitQueue);
+
+    if (isPreemptive) {
+        printf("Combined Preemptive Priority Simulation STARTED-----------\n");
+    } else {
+        printf("Combined Non-Preemptive Priority Simulation STARTED-----------\n");
+    }
+
+    // 모든 프로세스가 종료될 때까지 루프 실행
+    while (terminatedCount < processCount ) {
+        bool newEventOccurred = false; // 새 프로세스 도착 또는 I/O 완료 여부. 선점방식에서는 여기에 민감해진다
+
+        // 현재 시간에 도착한 프로세스를 Ready Queue에 추가
+        for (int i = 0; i < processCount; i++) {
+            if (processes[i] && processes[i]->status == NEW && processes[i]->arrival_time <= currentTime) {
+                processes[i]->status = READY;
+                processes[i]->time_entered_ready = currentTime;
+                // enqueue도 스케줄링 방식 별로 분리 (priority 기준으로 정렬되는 enqueue임)
+                if (!enqueue_for_priority(&readyQueue, processes[i])) {
+                    fprintf(stderr, "[Error] Priority: Ready queue full at time %d for P%d!\n", currentTime, processes[i]->pid);
+                }
+                // Assuming Process struct has 'priority' field for this print statement
+                printf("Time %d: Process %d ARRIVED (Priority: %d, Burst: %d)\n", currentTime, processes[i]->pid, processes[i]->priority, processes[i]->cpu_burst_time);
+                newEventOccurred = true; // 새로운 프로세스가 레디큐에 와도 선점될 수 있음
+            }
+        }
+
+        // I/O 진행 및 완료 처리 (완료된 프로세스는 Priority 순서로 Ready Queue에 추가)
+        int initialWaitQueueCount = waitQueue.count;
+        IO_Operation_Aging_Priority(&readyQueue, &waitQueue, &terminatedCount, currentTime);
+        if (waitQueue.count < initialWaitQueueCount ) {
+            newEventOccurred = true; // wait에서 ready로 간 프로세스가 있다면 선점 발생 가능
+        }
+
+        // 선점 판단 (Preemptive Priority인 경우 그리고 새 이벤트 발생 시, 현재 할당된 프로세스가 있는 경우)
+        if (isPreemptive && newEventOccurred && runningProcess != NULL) {
+            if (!isEmpty(&readyQueue)) {
+                // enqueue_for_priority에서 정렬해주기 때문에 맨 앞의 프로세스가 가장 높은 우선순위를 가짐
+                Process *highestPriorityInQueue = readyQueue.items[readyQueue.front];
+                // 낮은 숫자일수록 높은 우선순위 (priority 값이 작을수록 우선순위가 높음)
+                if (highestPriorityInQueue && highestPriorityInQueue->priority < runningProcess->priority) {
+                    printf("Time %d: Process %d (Prio: %d) PREEMPTED by Process %d (Prio: %d)\n",
+                           currentTime, runningProcess->pid, runningProcess->priority,
+                           highestPriorityInQueue->pid, highestPriorityInQueue->priority);
+
+                    // 현재 실행 중인 프로세스의 간트 차트 로그 종료
+                    if (ganttEntryCount > 0 && ganttLogArray[ganttEntryCount-1].pid == runningProcess->pid) {
+                        ganttLogArray[ganttEntryCount-1].endTime = currentTime;
+                    }
+
+                    runningProcess->status = READY;
+                    // Add running process back to ready queue (sorted by priority)
+                    if (!enqueue_for_priority(&readyQueue, runningProcess)) {
+                        fprintf(stderr, "[Error] Priority: Ready queue full during preemption at time %d!\n", currentTime);
+                    }
+
+                    runningProcess = NULL; // CPU가 비게 됨, 다음 단계에서 새 프로세스 선택
+                }
+            }
+        }
+
+        // CPU 할당 (CPU가 비어있고 Ready Queue에 프로세스가 있을 경우)
+        if (runningProcess == NULL && !isEmpty(&readyQueue)) {
+            runningProcess = dequeue(&readyQueue); // Ready queue is already sorted by Priority logic
+
+            if (runningProcess) {
+                runningProcess->status = RUNNING;
+                printf("Time %d: Process %d RUNNING (Priority: %d, Remaining Burst: %d)\n",
+                       currentTime, runningProcess->pid, runningProcess->priority, runningProcess->remaining_cpu_burst_time);
+
+                // 간트 차트 업데이트: 이전 IDLE 로그 종료 및 새 프로세스 로그 시작
+                if (ganttEntryCount > 0 && ganttLogArray[ganttEntryCount-1].pid == -1 && ganttLogArray[ganttEntryCount-1].endTime == 0) {
+                    ganttLogArray[ganttEntryCount-1].endTime = currentTime; // IDLE 상태 종료
+                }
+
+                ganttLogArray[ganttEntryCount].startTime = currentTime;
+                ganttLogArray[ganttEntryCount].pid = runningProcess->pid;
+                ganttLogArray[ganttEntryCount].endTime = 0; // 아직 끝나지 않음
+                ganttEntryCount++;
+            }
+        }
+
+        // CPU 실행
+        if (runningProcess != NULL) {
+            runningProcess->remaining_cpu_burst_time--;
+            runningProcess->cpu_time_used++;
+
+            // 프로세스 종료 검사
+            if (runningProcess->remaining_cpu_burst_time <= 0 || runningProcess->cpu_time_used >= runningProcess->cpu_burst_time) {
+                runningProcess->remaining_cpu_burst_time = 0;
+                if (runningProcess->cpu_time_used > runningProcess->cpu_burst_time) {
+                    runningProcess->cpu_time_used = runningProcess->cpu_burst_time;
+                }
+
+                if (runningProcess->status != TERMINATED) {
+                    runningProcess->status = TERMINATED;
+                    runningProcess->completion_time = currentTime + 1;
+                    terminatedCount++;
+
+                    printf("Time %d: Process %d TERMINATED (CPU used: %d, Remaining: %d)\n",
+                           currentTime + 1, runningProcess->pid,
+                           runningProcess->cpu_time_used, runningProcess->remaining_cpu_burst_time);
+
+                    ganttLogArray[ganttEntryCount-1].endTime = currentTime + 1;
+
+                    runningProcess = NULL;
+
+                }
+                // 다음 IDLE 로그 시작 준비
+                ganttLogArray[ganttEntryCount].startTime = currentTime + 1;
+                ganttLogArray[ganttEntryCount].pid = -1;
+                ganttLogArray[ganttEntryCount].endTime = 0;
+                ganttEntryCount++;
+
+            }
+            // I/O 요청 확인
+            else if (runningProcess->current_io_index < runningProcess->io_count &&
+                     runningProcess->cpu_time_used == runningProcess->io_trigger[runningProcess->current_io_index]) {
+
+                runningProcess->remaining_io_burst_time = runningProcess->io_burst_times[runningProcess->current_io_index];
+                runningProcess->status = WAITING;
+
+                printf("Time %d: Process %d requests I/O (Duration %d, Remaining CPU: %d)\n",
+                       currentTime + 1, runningProcess->pid, runningProcess->remaining_io_burst_time,
+                       runningProcess->remaining_cpu_burst_time);
+
+                ganttLogArray[ganttEntryCount-1].endTime = currentTime + 1;
+
+                if (!enqueue(&waitQueue, runningProcess)) {
+                    fprintf(stderr, "[Error] Priority: Wait queue full for P%d at time %d!\n", runningProcess->pid, currentTime);
+                }
+
+                runningProcess = NULL;
+
+
+
+                ganttLogArray[ganttEntryCount].startTime = currentTime + 1;
+                ganttLogArray[ganttEntryCount].pid = -1;
+                ganttLogArray[ganttEntryCount].endTime = 0;
+                ganttEntryCount++;
+                     }
+        }
+        //5초에 한번씩 aging 시켜주자
+        if (currentTime % 5 == 0 && !isEmpty(&readyQueue)) {
+            for (int i = 0; i < readyQueue.count; i++) {
+                Process *process = readyQueue.items[i];
+                if (currentTime - process->time_entered_ready > 15) {
+                    process->priority = process->priority / 2; // 최소값 제한
+                }
+            }
+
+            Process *process = dequeue(&readyQueue);
+
+            if (!enqueue_for_priority(&readyQueue, process)) {
+                fprintf(stderr, "[Error] Priority: Ready queue %d!\n", currentTime);
+            }
+        }
+
+        currentTime++;
+    }
+
+    // 마지막 로그 항목 종료 시간 설정
+    if (ganttEntryCount > 0 && ganttLogArray[ganttEntryCount-1].endTime == 0) {
+        ganttLogArray[ganttEntryCount-1].endTime = currentTime;
+    }
+
+    // 유효하지 않은 로그 항목 제거
+    int validLogs = 0;
+    for (int i = 0; i < ganttEntryCount; i++) {
+        if (ganttLogArray[i].startTime < ganttLogArray[i].endTime) {
+            if (i != validLogs) {
+                ganttLogArray[validLogs] = ganttLogArray[i];
+            }
+            validLogs++;
+        }
+    }
+
+    if (isPreemptive) {
+        printf("Combined Preemptive Priority Simulation COMPLETED at time %d-----------\n", currentTime);
+    } else {
+        printf("Combined Non-Preemptive Priority Simulation COMPLETED at time %d-----------\n", currentTime);
+    }
+    printf("Valid gantt chart logs: %d\n", validLogs);
+
+    drawGanttChart(ganttLogArray, validLogs);
+}
 
 
 
@@ -2043,10 +2494,27 @@ void runScheduler(Process* processes[], int processCount, int algorithm)
         printf("Preemptive Longest IO Short Scheduling algorithm selected\n");
         runLISCCombined(processes, processCount, true);
         break;
+
     case HRRN:
         printf("HRRN algorithm selected\n");
         runHRRN(processes, processCount);
         break;
+
+    case MultiLevelFeedbackQueue:
+        printf("Multi-Level Feedback Queue algorithm selected\n");
+        runMultiLevelFeedBackQueue(processes, processCount);
+        break;
+
+    case PriorityAgingNonPreemtive:
+        printf("Priority Aging algorithm selected\n");
+        runPriorityAgingCombined(processes, processCount, false);
+        break;
+
+    case PriorityAgingPreemtive:
+        printf("Priority Aging algorithm selected\n");
+        runPriorityAgingCombined(processes, processCount, true);
+        break;
+
 
     default:
         printf("Invalid algorithm selected\n");
@@ -2344,8 +2812,8 @@ void IO_Operation_HRRN(Queue *readyQueue, Queue *waitQueue, int currentTime, int
                       currentTime, process->pid, process->remaining_cpu_burst_time);
 
                 // HRRN의 경우, 단순히 Ready 큐에 추가
-                // (실제 비율 계산과 선택은 CPU 할당 시점에서 이루어짐)
-                if (!enqueue(readyQueue, process)) {
+
+                if (!enqueue_for_hrrn(readyQueue, process,currentTime)) {
                     printf("Error: HRRN Ready queue full when adding P%d after I/O\n", process->pid);
                 }
             }
@@ -2355,5 +2823,105 @@ void IO_Operation_HRRN(Queue *readyQueue, Queue *waitQueue, int currentTime, int
                 printf("Error re-enqueuing process to waitQueue\n");
             }
         }
+    }
+}
+
+void IO_Operation_Background(Queue *readyQueue, Queue *waitQueue, int *terminatedCount, int currentTime)
+{
+    int initial_waitQueue_count = waitQueue->count;
+    if (initial_waitQueue_count == 0) {
+        return;
+    }
+
+    for (int i = 0; i < initial_waitQueue_count; i++) {
+        Process *process = dequeue(waitQueue);
+        if (process == NULL) {
+            printf("Error: NULL process dequeued from waitQueue\n");
+            continue;
+        }
+
+
+        if (process->remaining_io_burst_time <= 0) {
+            process->current_io_index++;
+
+            // CPU 버스트 잔여량 확인
+            if (process->remaining_cpu_burst_time <= 0) {
+                process->remaining_cpu_burst_time = 0; // 음수 방지
+                if (process->status != TERMINATED) {
+                    process->status = TERMINATED;
+                    process->completion_time = currentTime;
+                    (*terminatedCount)++;
+                    printf("Time %d: Process %d I/O completed and TERMINATED\n",
+                          currentTime, process->pid);
+                }
+            } else {
+                // CPU 버스트가 남아있으면 READY 상태로
+                process->status = READY;
+                process->time_entered_ready = currentTime;
+
+                printf("Time %d: Process %d I/O completed, back to READY (Remaining CPU: %d)\n",
+                      currentTime, process->pid, process->remaining_cpu_burst_time);
+
+                // FCFS는 일반 enqueue 사용
+                if (!enqueue(readyQueue, process)) {
+                    printf("Error: Ready queue full when adding P%d after I/O\n", process->pid);
+                }
+            }
+        } else {
+            // I/O가 아직 완료되지 않은 경우 wait 큐에 다시 추가
+            if (!enqueue(waitQueue, process)) {
+                printf("Error re-enqueuing process to waitQueue\n");
+            }
+        }
+        process->remaining_io_burst_time--;
+    }
+}
+void IO_Operation_Aging_Priority(Queue *readyQueue, Queue *waitQueue, int *terminatedCount, int currentTime)
+{
+    int initial_waitQueue_count = waitQueue->count;
+    if (initial_waitQueue_count == 0) {
+        return;
+    }
+
+    for (int i = 0; i < initial_waitQueue_count; i++) {
+        Process *process = dequeue(waitQueue);
+        if (process == NULL) {
+            printf("Error: NULL process dequeued from waitQueue\n");
+            continue;
+        }
+
+
+        if (process->remaining_io_burst_time <= 0) {
+            process->current_io_index++;
+
+            // CPU 버스트 잔여량 확인
+            if (process->remaining_cpu_burst_time <= 0) {
+                process->remaining_cpu_burst_time = 0; // 음수 방지
+                if (process->status != TERMINATED) {
+                    process->status = TERMINATED;
+                    process->completion_time = currentTime;
+                    (*terminatedCount)++;
+                    printf("Time %d: Process %d I/O completed and TERMINATED\n",
+                          currentTime, process->pid);
+                }
+            } else {
+                // CPU 버스트가 남아있으면 READY 상태로
+                process->status = READY;
+                process->time_entered_ready = currentTime;
+
+                printf("Time %d: Process %d I/O completed, back to READY (Remaining CPU: %d)\n",
+                      currentTime, process->pid, process->remaining_cpu_burst_time);
+
+                if (!enqueue(readyQueue, process)) {
+                    printf("Error: Ready queue full when adding P%d after I/O\n", process->pid);
+                }
+            }
+        } else {
+            // I/O가 아직 완료되지 않은 경우 wait 큐에 다시 추가
+            if (!enqueue(waitQueue, process)) {
+                printf("Error re-enqueuing process to waitQueue\n");
+            }
+        }
+        process->remaining_io_burst_time--;
     }
 }

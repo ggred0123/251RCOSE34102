@@ -6,38 +6,17 @@
 #include <stdlib.h> // malloc, free
 #include <string.h> // memset
 
+
 // GanttChartLog 구조체 배열과 로그 개수를 인자로 받아 간트 차트를 그리는 함수
 void drawGanttChart(GanttChartLog logs[], int logCount) {
 
     // 프로세스 실행 세부 정보 출력
 
-    printf("\nProcess Execution Details:\n");
+    printf("\nGanttChart:\n");
 
     printf("------------------------\n");
 
 
-
-    // 로그를 시작 시간 기준으로 정렬 (버블 정렬)
-
-    for (int i = 0; i < logCount - 1; i++) {
-
-        for (int j = 0; j < logCount - i - 1; j++) {
-
-            if (logs[j].startTime > logs[j + 1].startTime) {
-
-                // 로그 순서 바꾸기
-
-                GanttChartLog temp = logs[j];
-
-                logs[j] = logs[j + 1];
-
-                logs[j + 1] = temp;
-
-            }
-
-        }
-
-    }
 
 
 

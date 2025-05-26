@@ -30,6 +30,8 @@ void printResults(Process* processes[], int processCount,int algorithm)
 {
     int totalWaitingTime    = 0;
     int totalTurnaroundTime = 0;
+    int totalCPUUsedTime = 0;
+    int completionTime = 0;
     const char* algorithmNames[] = {
         "",         // 인덱스 0은 사용 안 함 (선택적)
         "FCFS",     // 인덱스 1 (ALG_FCFS)
@@ -46,8 +48,7 @@ void printResults(Process* processes[], int processCount,int algorithm)
         "LongestIOShortestCPU",
         "PreemptiveLongestIOShortestCPU",
         "HRRN",
-
-
+        "MultiLevelFeedBackQueue",
 
     };
     printf("\n--- Scheduling Results for %s ---\n", algorithmNames[algorithm]);
@@ -83,13 +84,17 @@ void printResults(Process* processes[], int processCount,int algorithm)
         if (processes[i]->status == TERMINATED) {
             totalWaitingTime += processes[i]->waiting_time;
             totalTurnaroundTime += processes[i]->turnaround_time;
+            totalCPUUsedTime += processes[i]->cpu_time_used;
+            if (completionTime < processes[i]->completion_time) {
+                completionTime = processes[i]->completion_time;
+            }
+
         }
     }
-
-    if (processCount > 0) {
+        printf("\nCPU Utilization: %.2f\n", (double)totalCPUUsedTime / completionTime * 100);
         printf("\nAverage Waiting Time: %.2f\n", (double)totalWaitingTime / processCount);
         printf("Average Turnaround Time: %.2f\n", (double)totalTurnaroundTime / processCount);
-    }
+
 
     printf("---------------------------------------\n");
 }
@@ -101,7 +106,7 @@ typedef struct {
 } AlgorithmResult;
 
 void printAllResults(Process* processes[], int processCount) {
-    const int ALGORITHM_COUNT = 14;
+    const int ALGORITHM_COUNT = 15;
     const char* algorithmNames[] = {
         "",               // 인덱스 0은 사용 안 함
         "FCFS",           // 인덱스 1 (FCFS)
@@ -117,7 +122,8 @@ void printAllResults(Process* processes[], int processCount) {
         "LOTTERY",        // 인덱스 11 (LOTTERY)
         "LongestIOShortestCPU", // 인덱스 12 (LongestIOShortestCPU)
         "PreemptiveLongestIOShortestCPU", // 인덱스 13 (PreemptiveLongestIOShortestCPU)
-        "HRRN"            // 인덱스 14 (HRRN)
+        "HRRN",            // 인덱스 14 (HRRN)
+        "MultilevelFeedBackQueue"//인덱스 15(MLFQ)
     };
     
     AlgorithmResult results[ALGORITHM_COUNT + 1]; // 인덱스 1부터 14까지 사용
@@ -214,7 +220,7 @@ void printAllResults(Process* processes[], int processCount) {
         
         // 최소 반환 시간 알고리즘 표시
         if (alg == bestTurnaroundAlg) {
-            printf(" (최소)");
+            printf(" (MIN)");
         }
         
         printf("\n");

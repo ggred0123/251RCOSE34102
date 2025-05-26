@@ -34,6 +34,7 @@ bool enqueue_for_lif(Queue *queue, Process *process);
 
 bool enqueue_for_lisc(Queue *queue, Process *process);
 
+bool enqueue_for_hrrn(Queue *queue, Process *process, int currentTime);
 
 
 

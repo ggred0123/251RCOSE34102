@@ -146,6 +146,7 @@ bool enqueue_for_lif(Queue *queue, Process *process) {
         return false;
     }
 
+
     // 큐가 비어있으면 바로 삽입
     if (isEmpty(queue)) {
         queue->items[queue->rear] = process;
@@ -165,7 +166,7 @@ bool enqueue_for_lif(Queue *queue, Process *process) {
 
     // 새 프로세스의 총 IO 시간 계산
     int new_total_io_time = 0;
-    for (int i = 0; i < process->io_count; i++) {
+    for (int i = process->current_io_index; i < process->io_count; i++) {
         new_total_io_time += process->io_burst_times[i];
     }
 
@@ -174,7 +175,7 @@ bool enqueue_for_lif(Queue *queue, Process *process) {
     for (int i = 0; i < tempCount; i++) {
         // 현재 임시 배열 요소의 총 IO 시간 계산
         int current_total_io_time = 0;
-        for (int j = 0; j < temp[i]->io_count; j++) {
+        for (int j = temp[i]->current_io_index; j < temp[i]->io_count; j++) {
             current_total_io_time += temp[i]->io_burst_times[j];
         }
 
@@ -222,7 +223,7 @@ bool enqueue_for_lisc(Queue *queue, Process *process) {
 
     // 새 프로세스의 총 IO 시간 계산
     int process_total_io_time = 0;
-    for (int i = 0; i < process->io_count; i++) {
+    for (int i = process->current_io_index; i < process->io_count; i++) {
         process_total_io_time += process->io_burst_times[i];
     }
 
@@ -234,7 +235,7 @@ bool enqueue_for_lisc(Queue *queue, Process *process) {
     for (int i = 0; i < tempCount; i++) {
         // 현재 임시 배열 요소의 총 IO 시간 계산
         int current_total_io_time = 0;
-        for (int j = 0; j < temp[i]->io_count; j++) {
+        for (int j = temp[i]->current_io_index; j < temp[i]->io_count; j++) {
             current_total_io_time += temp[i]->io_burst_times[j];
         }
 
@@ -270,5 +271,58 @@ bool enqueue_for_lisc(Queue *queue, Process *process) {
     return true;
 }
 
+bool enqueue_for_hrrn(Queue *queue, Process *process, int currentTime) {
+    if (isFull(queue)) {
+        return false;
+    }
+
+    // 큐가 비어있으면 바로 삽입
+    if (isEmpty(queue)) {
+        queue->items[queue->rear] = process;
+        queue->rear = (queue->rear + 1) % MAX_QUEUE_CAPACITY;
+        queue->count++;
+        return true;
+    }
+
+    // 새 프로세스의 응답률 계산
+    int newWaitingTime = currentTime - process->time_entered_ready;
+    if (newWaitingTime < 0) newWaitingTime = 0;
+    double newRatio = (double)(newWaitingTime + process->remaining_cpu_burst_time) / process->remaining_cpu_burst_time;
+
+    // 임시 큐 생성하여 정렬된 상태로 요소들을 옮김
+    Process *temp[MAX_QUEUE_CAPACITY];
+    int tempCount = 0;
+
+    // 현재 큐의 모든 프로세스를 임시 배열로 복사
+    while (!isEmpty(queue)) {
+        temp[tempCount++] = dequeue(queue);
+    }
+
+    // 새 프로세스 삽입할 위치 찾기 (응답률이 높은 순서로 정렬)
+    int insertIdx = tempCount;
+    for (int i = 0; i < tempCount; i++) {
+        int existingWaitingTime = currentTime - temp[i]->time_entered_ready;
+
+        double existingRatio = (double)(existingWaitingTime + temp[i]->remaining_cpu_burst_time) / temp[i]->remaining_cpu_burst_time;
+
+        // 새 프로세스의 응답률이 더 높거나 같으면 (같으면 FIFO 순서 유지.. 등호가 안들어갔으니까..)
+        if (newRatio > existingRatio) {
+            insertIdx = i;
+            break;
+            }
+    }
+
+    // 임시 배열에서 다시 큐로 정렬된 순서대로 복원
+    for (int i = 0; i < tempCount + 1; i++) {
+        if (i == insertIdx) {
+            enqueue(queue, process); // 새 프로세스 삽입
+        }
+        if (i < tempCount) {
+            enqueue(queue, temp[i]); // 기존 프로세스 삽입
+        }
+    }
+
+    return true;
+}
 
 

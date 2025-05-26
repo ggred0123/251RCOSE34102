@@ -18,6 +18,9 @@
 #define LongestIOShortestCPU 12
 #define PreemptiveLongestIOShortestCPU 13
 #define HRRN 14
+#define MultiLevelFeedbackQueue 15
+#define PriorityAgingNonPreemtive 16
+#define PriorityAgingPreemtive 17
 
 
 //메인 스케줄러 함수로 지정된 알고리즘으로 프로세스들 스케줄링 해준다. 위에 define으로 여기서는 Int로 들어가고 입력시에는 알아보기 쉽게 이름으로
@@ -42,6 +45,9 @@ void runPreemptiveLongestIOFirst(Process* processes[], int processCount);
 
 void runMultiLevelQueue(Process* processes[], int processCount);
 
+void runMultiLevelFeedBackQueue(Process* processes[], int processCount);
+
+void runPriorityAgingCombined(Process* processes[], int processCount, bool isPreemptive);
 
 //프로세스 상태, 메트릭 초기화 함수
 void resetProcesses(Process* processes[], int processCount);
@@ -58,6 +64,10 @@ void IO_Operation_LIF(Queue *readyQueue, Queue *waitQueue, int *terminatedCount,
 void IO_Operation_LISC(Queue *readyQueue, Queue *waitQueue, int *terminatedCount, int *currentTime);
 
 void IO_Operation_HRRN(Queue *readyQueue, Queue *waitQueue, int currentTime, int *terminatedCount);
+
+void IO_Operation_Background(Queue *readyQueue, Queue *waitQueue, int *terminatedCount, int currentTime);
+
+void IO_Operation_Aging_Priority(Queue *readyQueue, Queue *waitQueue, int *terminatedCount, int currentTime);
 
 typedef bool (*EnqueueFunction)(Queue*, Process*);
 

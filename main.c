@@ -9,8 +9,9 @@
 #include <stdlib.h>
 
 int main()
-{
+{/*
     int processNumber = 0;
+    printf("Enter the number of processes: ");
     scanf("%d",&processNumber);
 
     if (processNumber>100) {
@@ -34,7 +35,7 @@ int main()
 
 
     }
-/*
+*/
     Process processes[5] = {
     // P1
     {
@@ -147,7 +148,7 @@ int main()
     for (int i = 0; i < 5; i++) {
         jobqueue[i] = &processes[i];
     }
-    int processNumber = 5;*/
+    int processNumber = 5;
 
 
     printf("----------------------------------\n");
@@ -167,7 +168,8 @@ int main()
     printf("12 - LongestIOShortestCPU Scheduling\n");
     printf("13 - PreemptiveLongestIOShortestCPU\n");
     printf("14 - HRRN\n");
-    printf("15 - Run All and Compare Performance\n");
+    printf("15 - MultiLevelFeedbackQueue\n");
+    printf("16 - Run All and Compare Performance\n");
 
 
 
@@ -179,7 +181,7 @@ int main()
 
 
     scanf("%d", &selectedAlgorithm);
-    if (selectedAlgorithm==15) {
+    if (selectedAlgorithm==18) {
         printAllResults(jobqueue, processNumber); // 모든 알고리즘 실행 및 결과 분석
     }
     else {
