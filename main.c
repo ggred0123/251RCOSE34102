@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 int main()
-{/*
+{
     int processNumber = 0;
     printf("Enter the number of processes: ");
     scanf("%d",&processNumber);
@@ -35,7 +35,7 @@ int main()
 
 
     }
-*/
+/*
     Process processes[5] = {
     // P1
     {
@@ -148,7 +148,7 @@ int main()
     for (int i = 0; i < 5; i++) {
         jobqueue[i] = &processes[i];
     }
-    int processNumber = 5;
+    int processNumber = 5;*/
 
 
     printf("----------------------------------\n");
@@ -169,7 +169,9 @@ int main()
     printf("13 - PreemptiveLongestIOShortestCPU\n");
     printf("14 - HRRN\n");
     printf("15 - MultiLevelFeedbackQueue\n");
-    printf("16 - Run All and Compare Performance\n");
+    printf("16 - NonpreemptiveAgingPriority\n");
+    printf("17 - PreemptiveAgingPriority\n");
+    printf("18 - Run All and Compare Performance\n");
 
 
 

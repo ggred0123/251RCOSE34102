@@ -305,7 +305,7 @@ bool enqueue_for_hrrn(Queue *queue, Process *process, int currentTime) {
 
         double existingRatio = (double)(existingWaitingTime + temp[i]->remaining_cpu_burst_time) / temp[i]->remaining_cpu_burst_time;
 
-        // 새 프로세스의 응답률이 더 높거나 같으면 (같으면 FIFO 순서 유지.. 등호가 안들어갔으니까..)
+        // 새 프로세스의 응답률이 더 높으면  (같으면 FIFO 순서 유지.. 등호가 안들어갔으니까..)
         if (newRatio > existingRatio) {
             insertIdx = i;
             break;

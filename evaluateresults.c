@@ -49,6 +49,8 @@ void printResults(Process* processes[], int processCount,int algorithm)
         "PreemptiveLongestIOShortestCPU",
         "HRRN",
         "MultiLevelFeedBackQueue",
+        "NonpreemptiveAgingPriority",
+        "PreemptiveAgingPriority",
 
     };
     printf("\n--- Scheduling Results for %s ---\n", algorithmNames[algorithm]);
@@ -106,24 +108,26 @@ typedef struct {
 } AlgorithmResult;
 
 void printAllResults(Process* processes[], int processCount) {
-    const int ALGORITHM_COUNT = 15;
+    const int ALGORITHM_COUNT = 17;
     const char* algorithmNames[] = {
-        "",               // 인덱스 0은 사용 안 함
-        "FCFS",           // 인덱스 1 (FCFS)
-        "SJF",            // 인덱스 2 (NonPreemptiveSJF)
-        "RR",             // 인덱스 3 (RoundRobin)
-        "Priority",       // 인덱스 4 (PRIORITY)
-        "PreemptiveSJF",  // 인덱스 5 (PreemptiveSJF)
-        "PreemptivePriority", // 인덱스 6 (PreemptivePriority)
-        "RoundRobinWithPriority", // 인덱스 7 (RoundRobinWithPriority)
-        "LongestIOFirst", // 인덱스 8 (LongestIOFirst)
-        "PreemptiveLongestIOFirst", // 인덱스 9 (PreemptiveLongestIOFirst)
-        "MultiLevelQueue", // 인덱스 10 (MultiLevelQueue)
-        "LOTTERY",        // 인덱스 11 (LOTTERY)
-        "LongestIOShortestCPU", // 인덱스 12 (LongestIOShortestCPU)
-        "PreemptiveLongestIOShortestCPU", // 인덱스 13 (PreemptiveLongestIOShortestCPU)
-        "HRRN",            // 인덱스 14 (HRRN)
-        "MultilevelFeedBackQueue"//인덱스 15(MLFQ)
+        "",
+        "FCFS",
+        "SJF",
+        "RR",
+        "Priority",
+        "PreemptiveSJF",
+        "PreemptivePriority",
+        "RoundRobinWithPriority",
+        "LongestIOFirst",
+        "PreemptiveLongestIOFirst",
+        "MultiLevelQueue",
+        "LOTTERY",
+        "LongestIOShortestCPU",
+        "PreemptiveLongestIOShortestCPU",
+        "HRRN",
+        "MultilevelFeedBackQueue",
+        "NonpreemptiveAgingPriority",
+        "PreemptiveAgingPriority",
     };
     
     AlgorithmResult results[ALGORITHM_COUNT + 1]; // 인덱스 1부터 14까지 사용
