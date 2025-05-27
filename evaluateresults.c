@@ -34,9 +34,9 @@ void printResults(Process* processes[], int processCount,int algorithm)
     int completionTime = 0;
     const char* algorithmNames[] = {
         "",         // 인덱스 0은 사용 안 함 (선택적)
-        "FCFS",     // 인덱스 1 (ALG_FCFS)
-        "SJF",      // 인덱스 2 (ALG_SJF)
-        "RR",        // 인덱스 3 (ALG_RR)
+        "FCFS",     // 인덱스 1 (FCFS)
+        "SJF",      // 인덱스 2 (SJF)
+        "RR",        // 인덱스 3 (RR)
         "Priority",
         "PreemptiveSJF",
         "PreemptivePriority",
