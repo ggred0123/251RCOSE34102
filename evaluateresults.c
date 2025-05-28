@@ -110,7 +110,7 @@ typedef struct {
 } AlgorithmResult;
 
 void printAllResults(Process* processes[], int processCount) {
-    const int ALGORITHM_COUNT = 19;
+    const int ALGORITHM_COUNT = 6;
     const char* algorithmNames[] = {
         "",
         "FCFS",
@@ -152,6 +152,7 @@ void printAllResults(Process* processes[], int processCount) {
         
         // 알고리즘 실행
         runScheduler(processes, processCount, alg);
+        printResults(processes, processCount, alg);
         
         // 결과 계산
         int totalWaitingTime = 0;

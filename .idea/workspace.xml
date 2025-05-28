@@ -33,19 +33,14 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/.ninja_deps" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/.ninja_deps" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/.ninja_log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/.ninja_log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/scheduler_simulator.dir/evaluateresults.c.o" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/scheduler_simulator.dir/evaluateresults.c.o" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/Testing/Temporary/LastTest.log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/Testing/Temporary/LastTest.log" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/scheduler_simulator" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/scheduler_simulator" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cpu_scheduler" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/evaluateresults.c" beforeDir="false" afterPath="$PROJECT_DIR$/evaluateresults.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/evaluateresults.o" beforeDir="false" afterPath="$PROJECT_DIR$/evaluateresults.o" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/main.c" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.o" beforeDir="false" afterPath="$PROJECT_DIR$/main.o" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/process.c" beforeDir="false" afterPath="$PROJECT_DIR$/process.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/process.h" beforeDir="false" afterPath="$PROJECT_DIR$/process.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/queue.c" beforeDir="false" afterPath="$PROJECT_DIR$/queue.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/queue.h" beforeDir="false" afterPath="$PROJECT_DIR$/queue.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scheduler.c" beforeDir="false" afterPath="$PROJECT_DIR$/scheduler.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scheduler.h" beforeDir="false" afterPath="$PROJECT_DIR$/scheduler.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/process.o" beforeDir="false" afterPath="$PROJECT_DIR$/process.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/queue.o" beforeDir="false" afterPath="$PROJECT_DIR$/queue.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scheduler.o" beforeDir="false" afterPath="$PROJECT_DIR$/scheduler.o" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -125,7 +120,7 @@
       <workItem from="1748241295158" duration="3582000" />
       <workItem from="1748318220055" duration="351000" />
       <workItem from="1748360529174" duration="1657000" />
-      <workItem from="1748402929693" duration="2035000" />
+      <workItem from="1748402929693" duration="7331000" />
     </task>
     <servers />
   </component>

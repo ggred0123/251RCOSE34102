@@ -10,6 +10,7 @@
 
 int main()
 {
+
     int processNumber = 0;
     printf("Enter the number of processes: ");
     scanf("%d",&processNumber);
@@ -40,17 +41,17 @@ int main()
     // P1
     {
         .pid = 1,
-        .arrival_time = 0,
-        .cpu_burst_time = 8,
-        .remaining_cpu_burst_time = 8,
-        .time_entered_ready = 0,
+        .arrival_time = 5,
+        .cpu_burst_time = 5,
+        .remaining_cpu_burst_time = 5,
+        .time_entered_ready = 5,
         .io_burst_time = 1,
         .remaining_io_burst_time = 1,
         .current_io_index = 0,
         .cpu_time_used = 0,
-        .io_count = 2,
-        .io_trigger = {3, 5, 0},
-        .io_burst_times = {1, 3, 0},
+        .io_count = 1,
+        .io_trigger = {3, 0, 0},
+        .io_burst_times = {3, 0, 0},
         .status = NEW,
         .waiting_time = 0,
         .turnaround_time = 0,
@@ -61,23 +62,24 @@ int main()
     // P2
     {
         .pid = 2,
-        .arrival_time = 1,
-        .cpu_burst_time = 4,
-        .remaining_cpu_burst_time = 4,
-        .time_entered_ready = 1,
+        .arrival_time = 6,
+        .cpu_burst_time = 5,
+        .remaining_cpu_burst_time = 6,
+        .time_entered_ready = 6,
         .io_burst_time = 0,
         .remaining_io_burst_time = 0,
         .current_io_index = 0,
         .cpu_time_used = 0,
-        .io_count = 0,
-        .io_trigger = {0, 0, 0},
-        .io_burst_times = {0, 0, 0},
+        .io_count = 1,
+        .io_trigger = {2, 0, 0},
+        .io_burst_times = {2, 0, 0},
         .status = NEW,
         .waiting_time = 0,
         .turnaround_time = 0,
         .completion_time = 0,
         .priority = 1
     },
+        };
 
     // P3
     {
@@ -143,12 +145,12 @@ int main()
     }
 };
 
-    Process *jobqueue[5];
+    Process *jobqueue[2];
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 2; i++) {
         jobqueue[i] = &processes[i];
     }
-    int processNumber = 5;*/
+    int processNumber = 2;*/
 
 
     printf("----------------------------------\n");
