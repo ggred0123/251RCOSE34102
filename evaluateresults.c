@@ -51,6 +51,8 @@ void printResults(Process* processes[], int processCount,int algorithm)
         "MultiLevelFeedBackQueue",
         "NonpreemptiveAgingPriority",
         "PreemptiveAgingPriority",
+        "NonpreemptiveStride",
+        "PreemptiveStride",
 
     };
     printf("\n--- Scheduling Results for %s ---\n", algorithmNames[algorithm]);
@@ -108,7 +110,7 @@ typedef struct {
 } AlgorithmResult;
 
 void printAllResults(Process* processes[], int processCount) {
-    const int ALGORITHM_COUNT = 17;
+    const int ALGORITHM_COUNT = 19;
     const char* algorithmNames[] = {
         "",
         "FCFS",
@@ -128,6 +130,8 @@ void printAllResults(Process* processes[], int processCount) {
         "MultilevelFeedBackQueue",
         "NonpreemptiveAgingPriority",
         "PreemptiveAgingPriority",
+        "NonpreemptiveStride",
+        "PreemptiveStride",
     };
     
     AlgorithmResult results[ALGORITHM_COUNT + 1]; // 인덱스 1부터 14까지 사용

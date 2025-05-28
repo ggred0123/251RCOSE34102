@@ -210,7 +210,7 @@ void runSJFCombined(Process* processes[], int processCount, bool isPreemptive) {
 
 
                     runningProcess->status = READY;
-                    if (!enqueue_for_sjf(&readyQueue, runningProcess)) { // Add running process back to ready queue (sorted)
+                    if (!enqueue_for_sjf(&readyQueue, runningProcess)) {
                         fprintf(stderr, "[Error] SJF: Ready queue full during preemption at time %d!\n", currentTime);
                     }
 
@@ -222,7 +222,7 @@ void runSJFCombined(Process* processes[], int processCount, bool isPreemptive) {
 
         // CPU 할당 (CPU가 비어있고 Ready Queue에 프로세스가 있을 경우)
         if (runningProcess == NULL && !isEmpty(&readyQueue)) {
-            runningProcess = dequeue(&readyQueue); // Ready queue is already sorted by SJF logic
+            runningProcess = dequeue(&readyQueue); //
 
             if (runningProcess) {
                 runningProcess->status = RUNNING;
@@ -1462,7 +1462,7 @@ void runLotteryScheduling(Process* processes[], int processCount)
         // I/O 진행 및 완료 처리
         IO_Operation(&readyQueue, &waitQueue, &terminatedCount, &currentTime);
 
-        // CPU 할당 - 로터리 방식으로 프로세스 선택
+        // CPU 할당
         if (runningProcess == NULL && !isEmpty(&readyQueue)) {
             // 로터리 당첨을 통해 프로세스 선택
             runningProcess = selectProcessByLottery(&readyQueue);
@@ -2401,6 +2401,210 @@ void runPriorityAgingCombined(Process* processes[], int processCount, bool isPre
     drawGanttChart(ganttLogArray, validLogs);
 }
 
+void runStrideCombined(Process* processes[], int processCount, bool isPreemptive) {
+
+    int currentTime = 0;
+    int terminatedCount = 0;
+    int ganttEntryCount = 0;
+
+    Queue readyQueue;
+    Queue waitQueue;
+    Process *runningProcess = NULL;
+    GanttChartLog ganttLogArray[MAX_GANTTCHART_LOG];
+
+    // 간트 차트 초기화 - 시작은 IDLE 상태
+    ganttLogArray[ganttEntryCount].startTime = currentTime;
+    ganttLogArray[ganttEntryCount].pid = -1;  // IDLE 상태
+    ganttLogArray[ganttEntryCount].endTime = 0; // 아직 끝나지 않음
+    ganttEntryCount++;
+
+    initialize_queue(&readyQueue);
+    initialize_queue(&waitQueue);
+
+    if (isPreemptive) {//선점인지 아닌지
+        printf("Preemptive Stride Simulation STARTED-----------\n");
+    } else {
+        printf("Non-Preemptive Stride Simulation STARTED-----------\n");
+    }
+
+    // 모든 프로세스가 종료될 때까지 루프 실행
+
+    while (terminatedCount < processCount ) {
+        bool newEventOccurred = false; // 새 프로세스 도착 또는 I/O 완료 여부.. 선점방식에서는 여기에 민감해진다
+
+        // 현재 시간에 도착한 프로세스를 Ready Queue에 추가해주자
+        for (int i = 0; i < processCount; i++) {
+            if (processes[i] && processes[i]->status == NEW && processes[i]->arrival_time <= currentTime) {
+                processes[i]->status = READY;
+                if (!enqueue_for_stride(&readyQueue, processes[i], currentTime)) { // enqueue도 스케줄링 방식 별로 분리해놓았다..(stride 기준으로 정렬되는 enqueue임)
+                    fprintf(stderr, "[Error] Stride: Ready queue full at time %d for P%d!\n", currentTime, processes[i]->pid);
+                }
+                printf("Time %d: Process %d ARRIVED (pass_value: %d)\n", currentTime, processes[i]->pid, processes[i]->pass_value);
+                newEventOccurred = true;// 새로운 프로세스가 레디큐에 와도 선점될 수 있음
+            }
+        }
+
+        //  I/O 진행 및 완료 처리 (완료된 프로세스는 pass_value 순서로 Ready Queue에 추가)
+        int initialWaitQueueCount = waitQueue.count;
+        IO_Operation_Stride(&readyQueue, &waitQueue, &terminatedCount, currentTime); //
+        if (waitQueue.count < initialWaitQueueCount ) {
+             newEventOccurred = true;// wait에서 ready로 간 프로세스가 있다면 선점 발생 가능
+        }
+
+
+        // 선점 판단
+        if (isPreemptive && newEventOccurred && runningProcess != NULL) {
+            if (!isEmpty(&readyQueue)) {
+                Process *lowestInQueue = readyQueue.items[readyQueue.front]; // enqueue에서 정렬해주기 때문에 맨 앞에 프로세스랑만 비교하면 된다
+                if (lowestInQueue && lowestInQueue->pass_value < runningProcess->pass_value) {
+                    printf("Time %d: Process %d (Rem: %d) PREEMPTED by Process %d (Pass_value: %d)\n",
+                           currentTime, runningProcess->pid, runningProcess->pass_value,
+                           lowestInQueue->pid, lowestInQueue->pass_value);
+
+                    // 현재 실행 중인 프로세스의 간트 차트 로그 종료
+                    if (ganttEntryCount > 0 && ganttLogArray[ganttEntryCount-1].pid == runningProcess->pid) {
+                       ganttLogArray[ganttEntryCount-1].endTime = currentTime;
+                    }
+
+
+                    runningProcess->status = READY;
+                    if (!enqueue_for_stride(&readyQueue, runningProcess, currentTime)) { // Add running process back to ready queue (sorted)
+                        fprintf(stderr, "[Error] Stride: Ready queue full during preemption at time %d!\n", currentTime);
+                    }
+
+                    runningProcess = NULL; // CPU가 비게 됨, 다음 단계에서 새 프로세스 선택
+
+                }
+            }
+        }
+
+        // CPU 할당 (CPU가 비어있고 Ready Queue에 프로세스가 있을 경우)
+        if (runningProcess == NULL && !isEmpty(&readyQueue)) {
+            runningProcess = dequeue(&readyQueue); //
+
+            int tickets = calculateTickets(runningProcess->priority);
+            int Stride = 10000/tickets;//(stride 정하는 큰 값을 10000으로 함)
+            runningProcess->pass_value += Stride;
+
+            if (runningProcess) {
+                runningProcess->status = RUNNING;
+                printf("Time %d: Process %d RUNNING (Remaining Burst: %d)\n",
+                       currentTime, runningProcess->pid, runningProcess->remaining_cpu_burst_time);
+
+                // 간트 차트 업데이트: 이전 IDLE 로그 종료 및 새 프로세스 로그 시작
+                if (ganttEntryCount > 0 && ganttLogArray[ganttEntryCount-1].pid == -1 && ganttLogArray[ganttEntryCount-1].endTime == 0) {
+                    ganttLogArray[ganttEntryCount-1].endTime = currentTime; // IDLE 상태 종료
+                }
+
+
+                ganttLogArray[ganttEntryCount].startTime = currentTime;
+                ganttLogArray[ganttEntryCount].pid = runningProcess->pid;
+                ganttLogArray[ganttEntryCount].endTime = 0; // 아직 끝나지 않음
+                ganttEntryCount++;
+            }
+        }
+
+        // CPU 실행
+        if (runningProcess != NULL) {
+            runningProcess->remaining_cpu_burst_time--;
+            runningProcess->cpu_time_used++;
+
+            // 프로세스 종료 검사
+            if (runningProcess->remaining_cpu_burst_time <= 0 || runningProcess->cpu_time_used >= runningProcess->cpu_burst_time) {
+                // 남은 CPU 시간이 음수가 되지 않도록 보장
+                runningProcess->remaining_cpu_burst_time = 0;
+                // CPU 사용량이 초과되지 않도록 제한
+                if (runningProcess->cpu_time_used > runningProcess->cpu_burst_time) {
+                    runningProcess->cpu_time_used = runningProcess->cpu_burst_time;
+                }
+
+                if (runningProcess->status != TERMINATED) {
+                    // 중복 방지
+                    runningProcess->status = TERMINATED;
+                    runningProcess->completion_time = currentTime + 1;
+                    terminatedCount++;
+
+                    printf("Time %d: Process %d TERMINATED (CPU used: %d, Remaining: %d)\n",
+                           currentTime + 1, runningProcess->pid,
+                           runningProcess->cpu_time_used, runningProcess->remaining_cpu_burst_time);
+
+                    ganttLogArray[ganttEntryCount-1].endTime = currentTime + 1; // 현재 프로세스 로그 종료
+
+                    runningProcess = NULL; // CPU 비움
+                }
+                // 다음 IDLE 로그 시작 준비 (실제 시작은 다음 루프에서 runningProcess가 NULL일 때)
+                    ganttLogArray[ganttEntryCount].startTime = currentTime + 1;
+                    ganttLogArray[ganttEntryCount].pid = -1; // IDLE 상태로 보낸다.(들어올지 안들어올지 여기서는 모르니까)
+                    ganttLogArray[ganttEntryCount].endTime = 0;
+                    ganttEntryCount++;
+
+
+            }
+            // I/O 요청 확인 - 구체적인건 fcfs랑 동일하게 설정
+            else if (runningProcess->current_io_index < runningProcess->io_count &&
+                     runningProcess->cpu_time_used == runningProcess->io_trigger[runningProcess->current_io_index]) {
+
+                runningProcess->remaining_io_burst_time = runningProcess->io_burst_times[runningProcess->current_io_index];
+                runningProcess->status = WAITING;
+
+                printf("Time %d: Process %d requests I/O (Duration %d, Remaining CPU: %d, Pass_value: %d)\n",
+                       currentTime + 1, runningProcess->pid, runningProcess->remaining_io_burst_time,
+                       runningProcess->remaining_cpu_burst_time, runningProcess->pass_value);
+
+                ganttLogArray[ganttEntryCount-1].endTime = currentTime + 1; // 현재 프로세스 로그 종료
+
+                if (!enqueue(&waitQueue, runningProcess)) { //
+                    fprintf(stderr, "[Error] Stride: Wait queue full for P%d at time %d!\n", runningProcess->pid, currentTime);
+                }
+
+                runningProcess = NULL; // CPU 비움
+
+                // 다음 IDLE 로그 시작 준비
+
+                    ganttLogArray[ganttEntryCount].startTime = currentTime + 1;
+                    ganttLogArray[ganttEntryCount].pid = -1; // 일단 IDLE
+                    ganttLogArray[ganttEntryCount].endTime = 0;
+                    ganttEntryCount++;
+
+            }
+        }
+
+
+        currentTime++;
+    }
+
+    // 마지막 로그 항목 종료 시간 설정 (모든 프로세스가 종료된 후)
+    if (ganttEntryCount > 0 && ganttLogArray[ganttEntryCount-1].endTime == 0) {
+        ganttLogArray[ganttEntryCount-1].endTime = currentTime;
+    }
+
+    // 유효하지 않은 로그 항목 제거 (시작 시간과 종료 시간이 같은 항목 다시 말하지만 일단 다 IDLE 로 보내기 때문에 이거 필요한거다
+    int validLogs = 0;
+    for (int i = 0; i < ganttEntryCount; i++) {
+        if (ganttLogArray[i].startTime < ganttLogArray[i].endTime) {
+            // 유효한 로그만 유지
+            if (i != validLogs) {
+                ganttLogArray[validLogs] = ganttLogArray[i];
+            }
+            validLogs++;
+        }
+    }
+
+
+    if (isPreemptive) {
+        printf("Combined Preemptive Stride Simulation COMPLETED at time %d-----------\n", currentTime);
+    } else {
+        printf("Combined Non-Preemptive Stride Simulation COMPLETED at time %d-----------\n", currentTime);
+    }
+    printf("Valid gantt chart logs: %d\n", validLogs);
+
+    drawGanttChart(ganttLogArray, validLogs);
+}
+
+
+
+
+
 
 
 
@@ -2513,6 +2717,15 @@ void runScheduler(Process* processes[], int processCount, int algorithm)
     case PriorityAgingPreemtive:
         printf("Priority Aging algorithm selected\n");
         runPriorityAgingCombined(processes, processCount, true);
+        break;
+
+    case NonpreemptiveStride:
+        printf("Nonpreemtive Stride algorithm selected\n");
+        runStrideCombined(processes, processCount, false);
+        break;
+    case PreemptiveStride:
+        printf("Preemtive Stride algorithm selected\n");
+        runStrideCombined(processes, processCount, true);
         break;
 
 
@@ -2923,5 +3136,56 @@ void IO_Operation_Aging_Priority(Queue *readyQueue, Queue *waitQueue, int *termi
             }
         }
         process->remaining_io_burst_time--;
+    }
+}
+void IO_Operation_Stride(Queue *readyQueue, Queue *waitQueue,int *terminatedCount, int currentTime)
+{
+    int initial_waitQueue_count = waitQueue->count;
+    if (initial_waitQueue_count == 0) {
+        return;
+    }
+
+    for (int i = 0; i < initial_waitQueue_count; i++) {
+        Process *process = dequeue(waitQueue);
+        if (process == NULL) {
+            printf("Error: NULL process dequeued from waitQueue\n");
+            continue;
+        }
+
+        // I/O 진행
+        process->remaining_io_burst_time--;
+
+        if (process->remaining_io_burst_time <= 0) {
+            process->current_io_index++;
+
+            // 중요: I/O 완료 후 CPU 버스트가 남아있는지 확인
+            if (process->remaining_cpu_burst_time <= 0) {
+                // CPU 버스트가 없으면 종료
+                if (process->status != TERMINATED) {
+                    process->status = TERMINATED;
+                    process->completion_time = currentTime;
+                    (*terminatedCount)++;
+                    printf("Time %d: Process %d I/O completed and TERMINATED\n",
+                          currentTime, process->pid);
+                }
+            } else {
+                // CPU 버스트가 남아있으면 READY 상태로
+                process->status = READY;
+                process->time_entered_ready = currentTime;
+                printf("Time %d: Process %d I/O completed, back to READY (Remaining CPU: %d)\n",
+                      currentTime, process->pid, process->remaining_cpu_burst_time);
+
+                // HRRN의 경우, 단순히 Ready 큐에 추가
+
+                if (!enqueue_for_stride(readyQueue, process,currentTime)) {
+                    printf("Error: HRRN Ready queue full when adding P%d after I/O\n", process->pid);
+                }
+            }
+        } else {
+            // I/O가 아직 완료되지 않은 경우 wait 큐에 다시 추가
+            if (!enqueue(waitQueue, process)) {
+                printf("Error re-enqueuing process to waitQueue\n");
+            }
+        }
     }
 }

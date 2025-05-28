@@ -28,6 +28,7 @@ typedef struct Process
     int    turnaround_time;
     int    completion_time;
     int    priority;
+    int    pass_value;//for stride
 
 
 } Process;

@@ -325,4 +325,51 @@ bool enqueue_for_hrrn(Queue *queue, Process *process, int currentTime) {
     return true;
 }
 
+bool enqueue_for_stride(Queue *queue, Process *process, int currentTime) {
+    if (isFull(queue)) {
+        return false;
+    }
+
+    // 큐가 비어있으면 바로 삽입
+    if (isEmpty(queue)) {
+        queue->items[queue->rear] = process;
+        queue->rear = (queue->rear + 1) % MAX_QUEUE_CAPACITY;
+        queue->count++;
+        return true;
+    }
+
+
+    // 임시 큐 생성하여 정렬된 상태로 요소들을 옮김
+    Process *temp[MAX_QUEUE_CAPACITY];
+    int tempCount = 0;
+
+    // 현재 큐의 모든 프로세스를 임시 배열로 복사
+    while (!isEmpty(queue)) {
+        temp[tempCount++] = dequeue(queue);
+    }
+
+    // 새 프로세스 삽입할 위치 찾기 (passvalueㄱㅏ 낮은 순서대로 정렬)
+    int insertIdx = tempCount;
+    for (int i = 0; i < tempCount; i++) {
+
+
+        // 새 프로세스의 pass_value가 더 낮다면
+        if (process->pass_value<temp[i]->pass_value) {
+            insertIdx = i;
+            break;
+        }
+    }
+
+    // 임시 배열에서 다시 큐로 정렬된 순서대로 복원
+    for (int i = 0; i < tempCount + 1; i++) {
+        if (i == insertIdx) {
+            enqueue(queue, process); // 새 프로세스 삽입
+        }
+        if (i < tempCount) {
+            enqueue(queue, temp[i]); // 기존 프로세스 삽입
+        }
+    }
+
+    return true;
+}
 

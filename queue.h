@@ -36,7 +36,7 @@ bool enqueue_for_lisc(Queue *queue, Process *process);
 
 bool enqueue_for_hrrn(Queue *queue, Process *process, int currentTime);
 
-
+bool enqueue_for_stride(Queue *queue, Process *process,int currentTime);
 
 #endif // QUEUE_H
 

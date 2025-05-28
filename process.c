@@ -51,6 +51,7 @@ Process *createProcess(const int pid)
     process->completion_time = 0;
     process->waiting_time    = 0;
     process->turnaround_time = 0;
+    process->pass_value =0;
 
     return process;
 }

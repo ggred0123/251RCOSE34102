@@ -171,7 +171,9 @@ int main()
     printf("15 - MultiLevelFeedbackQueue\n");
     printf("16 - NonpreemptiveAgingPriority\n");
     printf("17 - PreemptiveAgingPriority\n");
-    printf("18 - Run All and Compare Performance\n");
+    printf("18 - NonPreemptiveStride\n");
+    printf("19 - PreemptiveAgingStride\n");
+    printf("20 - Run All and Compare Performance\n");
 
 
 
@@ -183,7 +185,7 @@ int main()
 
 
     scanf("%d", &selectedAlgorithm);
-    if (selectedAlgorithm==18) {
+    if (selectedAlgorithm==20) {
         printAllResults(jobqueue, processNumber); // 모든 알고리즘 실행 및 결과 분석
     }
     else {
