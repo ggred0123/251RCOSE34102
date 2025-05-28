@@ -110,7 +110,7 @@ typedef struct {
 } AlgorithmResult;
 
 void printAllResults(Process* processes[], int processCount) {
-    const int ALGORITHM_COUNT = 6;
+    const int ALGORITHM_COUNT = 19;
     const char* algorithmNames[] = {
         "",
         "FCFS",
