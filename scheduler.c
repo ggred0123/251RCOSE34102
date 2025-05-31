@@ -1658,7 +1658,7 @@ void runLISCCombined(Process* processes[], int processCount, bool isPreemptive) 
 
             if (runningProcess) {
                 runningProcess->status = RUNNING; // 상태를 RUNNING으로 변경
-                printf("시간 %d: 프로세스 %d 실행 시작 (총 IO: %d, 남은 CPU: %d)\n",
+                printf("Time %d: Process %d Execution Time (Total IO: %d, Remaining CPU: %d)\n",
                        currentTime, runningProcess->pid, runningProcess->io_burst_time, runningProcess->remaining_cpu_burst_time);
 
                 // 이전 로그가 IDLE 상태였다면 IDLE 로그 종료
@@ -1684,7 +1684,7 @@ void runLISCCombined(Process* processes[], int processCount, bool isPreemptive) 
                 runningProcess->status = TERMINATED;
                 runningProcess->completion_time = currentTime + 1;
                 terminatedCount++;
-                printf("시간 %d: 프로세스 %d 종료됨\n", currentTime + 1, runningProcess->pid);
+                printf("Time %d: Process %d Terminated\n", currentTime + 1, runningProcess->pid);
 
                 ganttLogArray[ganttEntryCount-1].endTime = currentTime + 1;
                 runningProcess = NULL;
